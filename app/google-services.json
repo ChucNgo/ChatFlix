@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "920219348188",
+    "firebase_url": "https://chatflix-401d0.firebaseio.com",
+    "project_id": "chatflix-401d0",
+    "storage_bucket": "chatflix-401d0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:920219348188:android:2435e7118cebf427",
+        "android_client_info": {
+          "package_name": "com.project.chatflix"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "920219348188-opes2bpg6ubftav9ngevn10ja9jm5acn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.project.chatflix",
+            "certificate_hash": "22b73f32190a8fd23e900671c0a8a30fde330ee6"
+          }
+        },
+        {
+          "client_id": "920219348188-jhvti92nk84hauvrdad7apninrvbbq2g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAreyGWnLBUwUQfks-7OXw2B9eMKjqTaIA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "920219348188-jhvti92nk84hauvrdad7apninrvbbq2g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
