@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
@@ -22,6 +23,7 @@ import com.project.chatflix.MainActivity;
 import com.project.chatflix.R;
 import com.project.chatflix.utils.StaticConfig;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
+import com.yarolegovich.lovelydialog.LovelyTextInputDialog;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,6 +55,7 @@ public class LoginActivity extends Activity
 
     private LovelyProgressDialog waitingDialog;
     private ImageView imgRemember;
+    private Button btnForgotPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +90,7 @@ public class LoginActivity extends Activity
         btnReg = (Button) findViewById(R.id.btnReg);
         layoutRememberLogin = (LinearLayout) findViewById(R.id.layout_remember_login);
         imgRemember = (ImageView) findViewById(R.id.radioButton);
+        btnForgotPassword = (Button) findViewById(R.id.btnForgotPassword);
     }
 
     private void addEvent() {
@@ -141,6 +145,46 @@ public class LoginActivity extends Activity
                 imgRemember.setBackgroundResource(R.drawable.rb_unchecked);
             }
         });
+
+        btnForgotPassword.setOnClickListener(v -> {
+            new LovelyTextInputDialog(this, R.style.EditTextTintTheme)
+                    .setTopColorRes(R.color.colorPrimary)
+                    .setTitle("Reset Password")
+                    .setMessage("Enter your email...")
+                    .setIcon(R.drawable.ic_add_friend)
+                    .setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS)
+                    .setInputFilter("Email not found", new LovelyTextInputDialog.TextFilter() {
+                        @Override
+                        public boolean check(String text) {
+                            Pattern VALID_EMAIL_ADDRESS_REGEX =
+                                    Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+                            Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(text);
+                            return matcher.find();
+                        }
+                    })
+                    .setConfirmButton(android.R.string.ok, text -> {
+                        sendEmailResetPassword(text);
+                    })
+                    .show();
+        });
+    }
+
+    private void sendEmailResetPassword(String text) {
+        waitingDialog.setCancelable(false)
+                .setIcon(R.drawable.ic_add_friend)
+                .setTitle("Sending email...")
+                .setTopColorRes(R.color.colorPrimary)
+                .show();
+        mAuth.sendPasswordResetEmail(text)
+                .addOnCompleteListener(task -> {
+                    waitingDialog.dismiss();
+                    if (task.isSuccessful() && task.isComplete()) {
+                        Toast.makeText(this, "We sent a reset password to your email! Please check your email", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(this, "Send email fail! Please try again", Toast.LENGTH_LONG).show();
+                    }
+                });
+
     }
 
 //    @Override

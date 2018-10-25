@@ -135,12 +135,23 @@
 
     </LinearLayout>
 
+    <Button
+        android:id="@+id/btnForgotPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Forgot Password"
+        android:textColor="#fff"
+        android:layout_below="@+id/linear"
+        android:layout_centerHorizontal="true"
+        android:textAllCaps="false"
+        android:background="@android:color/transparent"
+        />
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_below="@+id/linear"
-        android:layout_marginTop="16dp"
+        android:layout_below="@+id/btnForgotPassword"
         android:layout_centerHorizontal="true">
 
         <TextView
