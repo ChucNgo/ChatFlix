@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/custom_bar_image"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="10dp"
+        android:src="@drawable/bg_moutain"
+        android:layout_alignParentRight="true" />
+
+    <Button
+        android:id="@+id/btnVideo"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@drawable/video"
+        android:layout_toLeftOf="@+id/custom_bar_image"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="15dp"/>
+
+    <Button
+        android:id="@+id/btnCall"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:background="@drawable/call"
+        android:layout_toLeftOf="@+id/btnVideo"
+        android:layout_marginTop="11dp"
+        android:layout_marginRight="15dp"/>
+
+    <TextView
+        android:id="@+id/custom_bar_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:text="Display Name"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:id="@+id/custom_bar_seen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/custom_bar_title"
+        android:text=""
+        android:textColor="@android:color/white"
+        android:textSize="13sp"
+        android:layout_alignParentLeft="true" />
+
+</RelativeLayout>

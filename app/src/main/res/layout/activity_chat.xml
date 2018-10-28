@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_moutain_1">
+
+    <include layout="@layout/app_bar_layout_chat_custom"
+        android:id="@+id/toolbarChat" />
+
+
+
+    <!--<View-->
+        <!--android:id="@+id/line"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="1dp"-->
+        <!--android:background="@color/grey_200"-->
+        <!--android:layout_above="@id/btnSend"/>-->
+
+    <android.support.v7.widget.RecyclerView
+        android:layout_below="@+id/toolbarChat"
+        android:id="@+id/recyclerChat"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/line">
+
+    </android.support.v7.widget.RecyclerView>
+
+    <View
+        android:layout_marginTop="5dp"
+        android:id="@+id/line"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#00000000"
+        android:layout_above="@id/btnSend"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@id/btnSend"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@id/btnSend"
+        android:paddingRight="10dp"
+        android:background="@drawable/edittext_boder">
+
+        <Button
+            android:id="@+id/btnAddImage"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/edittext_boder"
+            android:drawableTop="@drawable/add_image"
+            android:paddingTop="30dp"/>
+
+        <EditText
+            android:id="@+id/editWriteMessage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:maxLines="3"
+            android:textColorHint="#aeafaf"
+            android:hint="Type text message..."
+            android:background="@drawable/edittext_boder"
+            android:textSize="16sp"/>
+
+    </LinearLayout>
+
+
+    <ImageButton
+        android:id="@+id/btnSend"
+        android:layout_width="60dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="10dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:background="#00000000"
+        android:padding="3dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:scaleType="centerInside"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/paper_plane_1" />
+
+</RelativeLayout>
