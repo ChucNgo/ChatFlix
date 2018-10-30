@@ -34,6 +34,7 @@
 
         <activity android:name=".MainActivity" />
         <activity android:name=".activity.NextRegisterActivity" />
+        <activity android:name=".activity.ChatActivity" />
     </application>
 
 </manifest>
