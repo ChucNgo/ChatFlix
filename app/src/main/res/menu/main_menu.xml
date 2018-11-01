@@ -4,6 +4,6 @@
 
     <item
         android:icon="@drawable/logo"
-        android:id="@+id/about"
-        android:title="About" />
+        android:id="@+id/list_friend_request"
+        android:title="Lời mời kết bạn" />
 </menu>

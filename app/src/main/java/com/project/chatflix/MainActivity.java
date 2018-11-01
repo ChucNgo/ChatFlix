@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         tabLayout = (TabLayout) findViewById(R.id.tabMain);
         tabLayout.setupWithViewPager(viewPager);
         tabLayout.animate();
-        tabLayout.setSelectedTabIndicatorColor(getResources().getColor(R.color.tab_color));
+        tabLayout.setSelectedTabIndicatorColor(getResources().getColor(R.color.off_white));
         tabLayout.setSelectedTabIndicatorHeight(3);
 
         floatButton = (FloatingActionButton) findViewById(R.id.fab);
@@ -65,25 +65,6 @@ public class MainActivity extends AppCompatActivity {
             mUserRef = FirebaseDatabase.getInstance().getReference().child("Users")
                     .child(mAuth.getCurrentUser().getUid());
         }
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        super.onOptionsItemSelected(item);
-        if (item.getItemId() == R.id.about) {
-            // Log out account
-            Toast.makeText(MainActivity.this, "ChatFlix version 1.0", Toast.LENGTH_LONG).show();
-        }
-        return true;
     }
 
     @Override

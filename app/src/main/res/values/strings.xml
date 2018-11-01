@@ -8,5 +8,17 @@
     <string name="chat">CHAT</string>
     <string name="group">GROUP</string>
     <string name="info">INFO</string>
+    <string name="placeholder_name">Name</string>
+    <string name="placeholder_email">Email</string>
+    <string name="i_agree_to_the_terms_and_conditions">I agree to the Terms and Conditions</string>
+    <string name="register">Register</string>
+    <string name="get_started">Get Started</string>
+    <string name="just_a_few_details_to_get_you_started">Just a few details to get you started</string>
+    <string name="password">Password</string>
+    <string name="remember_me">Remember me</string>
+    <string name="sign_in">Sign In</string>
+    <string name="forgot_password">Forgot Password</string>
+    <string name="dont_t_have_an_account">Dont\'t have an account ?</string>
+    <string name="sign_up">Sign up</string>
 
 </resources>
