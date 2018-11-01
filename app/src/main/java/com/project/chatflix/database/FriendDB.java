@@ -54,7 +54,7 @@ public final class FriendDB {
         ListFriend listFriend = new ListFriend();
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
         // Define a projection that specifies which columns from the database
-// you will actually use after this query.
+        // you will actually use after this query.
         try {
             Cursor cursor = db.rawQuery("select * from " + FeedEntry.TABLE_NAME, null);
             while (cursor.moveToNext()) {

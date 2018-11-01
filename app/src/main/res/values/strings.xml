@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">ChatFlix</string>
+    <string name="permission_sinch">This application needs permission to use your microphone to function properly.</string>
+    <string name="notify_sinch">You may now place a call</string>
+
+    <string name="friend_chat">FriendChat</string>
+
+    <string name="chat">CHAT</string>
+    <string name="group">GROUP</string>
+    <string name="info">INFO</string>
+
 </resources>

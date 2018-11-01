@@ -25,7 +25,7 @@ import com.project.chatflix.fragment.GroupFragment;
 import com.project.chatflix.fragment.InfoFragment;
 import com.project.chatflix.service.ServiceUtils;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity {
 
     private Toolbar tb;
     private ViewPager viewPager;
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tb = (android.support.v7.widget.Toolbar) findViewById(R.id.toolbarMain);
+        tb = (Toolbar) findViewById(R.id.toolbarMain);
         setSupportActionBar(tb);
         getSupportActionBar().setTitle("");
 
@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity{
         tabLayout = (TabLayout) findViewById(R.id.tabMain);
         tabLayout.setupWithViewPager(viewPager);
         tabLayout.animate();
-        tabLayout.setSelectedTabIndicatorColor(Color.parseColor("#455A64"));
+        tabLayout.setSelectedTabIndicatorColor(getResources().getColor(R.color.tab_color));
         tabLayout.setSelectedTabIndicatorHeight(3);
 
         floatButton = (FloatingActionButton) findViewById(R.id.fab);
@@ -62,14 +62,9 @@ public class MainActivity extends AppCompatActivity{
         setupViewPager(viewPager);
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() != null) {
-
-
             mUserRef = FirebaseDatabase.getInstance().getReference().child("Users")
                     .child(mAuth.getCurrentUser().getUid());
-
         }
-
-
     }
 
 
@@ -84,32 +79,22 @@ public class MainActivity extends AppCompatActivity{
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         super.onOptionsItemSelected(item);
-
-        if (item.getItemId() == R.id.about){
-
+        if (item.getItemId() == R.id.about) {
             // Log out account
-            Toast.makeText(MainActivity.this,"ChatFlix version 1.0",Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, "ChatFlix version 1.0", Toast.LENGTH_LONG).show();
         }
-
         return true;
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-
         FirebaseUser currentUser = mAuth.getCurrentUser();
-
-        if(currentUser == null){
-
+        if (currentUser == null) {
             sendToStart();
-
         } else {
-
             mUserRef.child("online").setValue("true");
-
         }
-
         ServiceUtils.stopServiceFriendChat(getApplicationContext(), false);
 
 //        if (getSinchServiceInterface().isStarted()) {
@@ -123,10 +108,8 @@ public class MainActivity extends AppCompatActivity{
 
     @Override
     protected void onStop() {
-
         super.onStop();
 //        Toast.makeText(MainActivity.this,"Start friend chat service",Toast.LENGTH_SHORT).show();
-
     }
 
     @Override
@@ -146,9 +129,9 @@ public class MainActivity extends AppCompatActivity{
 
     private void setupViewPager(ViewPager viewPager) {
         sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        sectionsPagerAdapter.addFrag(new ChatFragment(), "CHAT");
-        sectionsPagerAdapter.addFrag(new GroupFragment(), "GROUP");
-        sectionsPagerAdapter.addFrag(new InfoFragment(), "INFO");
+        sectionsPagerAdapter.addFrag(new ChatFragment(), getString(R.string.chat));
+        sectionsPagerAdapter.addFrag(new GroupFragment(), getString(R.string.group));
+        sectionsPagerAdapter.addFrag(new InfoFragment(), getString(R.string.info));
         floatButton.setOnClickListener(((ChatFragment) sectionsPagerAdapter.getItem(0)).onClickFloatButton.getInstance(this));
         viewPager.setAdapter(sectionsPagerAdapter);
         viewPager.setOffscreenPageLimit(3);
@@ -182,11 +165,9 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void sendToStart() {
-
         Intent startIntent = new Intent(MainActivity.this, LoginActivity.class);
         startActivity(startIntent);
         finish();
-
     }
 
     @Override
@@ -195,7 +176,7 @@ public class MainActivity extends AppCompatActivity{
 //            getSinchServiceInterface().stopClient();
 //            Toast.makeText(MainActivity.this,"Stop Service Sinch",Toast.LENGTH_SHORT).show();
 //        }
-        if(mAuth.getCurrentUser() != null){
+        if (mAuth.getCurrentUser() != null) {
             FirebaseDatabase.getInstance().getReference().child("Users")
                     .child(mAuth.getCurrentUser().getUid())
                     .child("online").setValue(ServerValue.TIMESTAMP);
@@ -204,8 +185,6 @@ public class MainActivity extends AppCompatActivity{
 
         super.onDestroy();
     }
-
-
 //    @Override
 //    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
 //        if (SinchService.class.getName().equals(componentName.getClassName())) {
@@ -213,7 +192,4 @@ public class MainActivity extends AppCompatActivity{
 //            onServiceConnected();
 //        }
 //    }
-
-
-
 }
