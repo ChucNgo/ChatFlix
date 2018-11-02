@@ -1,7 +1,6 @@
 package com.project.chatflix.utils;
 
 
-
 public class StaticConfig {
     public static int REQUEST_CODE_REGISTER = 2000;
     public static String STR_EXTRA_ACTION_LOGIN = "login";
@@ -20,5 +19,8 @@ public class StaticConfig {
     public static long TIME_TO_REFRESH = 10 * 1000;
     public static long TIME_TO_OFFLINE = 2 * 60 * 1000;
 
-
+    public static final String USERNAME_LABEL = "Username";
+    public static final String EMAIL_LABEL = "Email";
+    public static final String SIGNOUT_LABEL = "Sign out";
+    public static final String RESETPASS_LABEL = "Change Password";
 }

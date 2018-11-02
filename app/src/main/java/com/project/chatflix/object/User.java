@@ -1,9 +1,5 @@
 package com.project.chatflix.object;
 
-/**
- * Created by Chuc Ngo on 19/06/17.
- */
-
 public class User {
 
     public String name;

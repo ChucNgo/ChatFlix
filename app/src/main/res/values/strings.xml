@@ -20,5 +20,27 @@
     <string name="forgot_password">Forgot Password</string>
     <string name="dont_t_have_an_account">Dont\'t have an account ?</string>
     <string name="sign_up">Sign up</string>
-
+    <string name="sign_out_title">Sign out</string>
+    <string name="sign_out_message">Are you sure you want to log out?</string>
+    <string name="sure_want_to_reset_password">Are you sure want to reset password?</string>
+    <string name="password_recovery">Password Recovery</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="edit_username">Edit Display Name</string>
+    <string name="users">Users</string>
+    <string name="online">online</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="failed">Failed</string>
+    <string name="avatar">Avatar</string>
+    <string name="sure_want_to_change_avatar">Are you sure want to change avatar profile?</string>
+    <string name="select_picture">Select Picture</string>
+    <string name="error_occured_please_try_again">Error occured. Please try again!</string>
+    <string name="avatar_updating">Avatar updating....</string>
+    <string name="avatar_field">avatar</string>
+    <string name="success">Success</string>
+    <string name="update_avatar_success">Update avatar successfully!</string>
+    <string name="error_upload_avatar">False to update avatar</string>
+    <string name="name_field">name</string>
 </resources>
