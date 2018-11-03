@@ -43,4 +43,22 @@
     <string name="update_avatar_success">Update avatar successfully!</string>
     <string name="error_upload_avatar">False to update avatar</string>
     <string name="name_field">name</string>
+    <string name="default_field">default</string>
+    <string name="email">email</string>
+    <string name="user_id">user_id</string>
+    <string name="password_field">password</string>
+    <string name="invalid_email">Invalid email!</string>
+    <string name="fill_all_requirements">Must fill all requirements!</string>
+    <string name="register_user">Register User</string>
+    <string name="creating_user">Creating user...</string>
+    <string name="friend_request">Friend Request</string>
+    <string name="accept">Accept</string>
+    <string name="remove">Remove</string>
+    <string name="please_wait">Please wait....!</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="enter_your_email">Enter your email...</string>
+    <string name="email_not_found">Email not found</string>
+    <string name="sending_email">Sending email...</string>
+    <string name="we_sent_email_reset_password">We sent a reset password to your email! Please check your email</string>
+    <string name="email_password_invalid">Email or Password is invalid! Please try again!</string>
 </resources>

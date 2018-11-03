@@ -16,6 +16,8 @@
     <color name="grey_100">#F5F5F5</color>
     <color name="grey_800">#212121</color>
 
+    <color name="grey_text">#616364</color>
+
     <color name="sinch_purple">#ff63029d</color>
     <color name="off_white">#fffafafa</color>
     <color name="greyish">#fff2f1f2</color>

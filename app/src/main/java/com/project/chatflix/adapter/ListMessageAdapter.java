@@ -47,10 +47,10 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         if (viewType == ChatActivity.VIEW_TYPE_FRIEND_MESSAGE) {
-            View view = LayoutInflater.from(context).inflate(R.layout.rc_item_message_friend, parent, false);
+            View view = LayoutInflater.from(context).inflate(R.layout.item_message_friend, parent, false);
             return new ItemMessageFriendHolder(view);
         } else if (viewType == ChatActivity.VIEW_TYPE_USER_MESSAGE) {
-            View view = LayoutInflater.from(context).inflate(R.layout.rc_item_message_user, parent, false);
+            View view = LayoutInflater.from(context).inflate(R.layout.item_message_user, parent, false);
             return new ItemMessageUserHolder(view);
         }
         return null;

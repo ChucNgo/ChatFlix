@@ -19,7 +19,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
-import com.project.chatflix.CallBack;
+import com.project.chatflix.interfaces.CallBack;
 import com.project.chatflix.R;
 import com.project.chatflix.activity.LoginActivity;
 import com.project.chatflix.database.FriendDB;
@@ -49,7 +49,7 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.list_info_item_layout, parent, false);
+                .inflate(R.layout.item_info_layout, parent, false);
         return new ViewHolder(itemView);
     }
 

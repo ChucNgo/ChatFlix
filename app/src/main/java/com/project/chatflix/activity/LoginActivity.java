@@ -66,8 +66,8 @@ public class LoginActivity extends Activity
         loadAccount();
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            email = (String) extras.get("email");
-            password = (String) extras.get("password");
+            email = (String) extras.get(getString(R.string.email));
+            password = (String) extras.get(getString(R.string.password_field));
             txtEmailLogin.setText(email);
             txtPasswordLogin.setText(password);
         }
@@ -107,8 +107,8 @@ public class LoginActivity extends Activity
             if (!TextUtils.isEmpty(email) || !TextUtils.isEmpty(password)) {
 
                 if (validate(email, password)) {
-                    progressDialog.setTitle("Sign in");
-                    progressDialog.setMessage("Please wait....!");
+                    progressDialog.setTitle(getString(R.string.sign_in));
+                    progressDialog.setMessage(getString(R.string.please_wait));
                     progressDialog.setCanceledOnTouchOutside(false);
                     progressDialog.show();
 
@@ -126,11 +126,11 @@ public class LoginActivity extends Activity
 //                        }
 
                 } else {
-                    Toast.makeText(LoginActivity.this, "Invalid email!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, getString(R.string.invalid_email), Toast.LENGTH_SHORT).show();
                 }
 
             } else {
-                Toast.makeText(LoginActivity.this, "Must fill all requirements!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, getString(R.string.fill_all_requirements), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -149,18 +149,15 @@ public class LoginActivity extends Activity
         btnForgotPassword.setOnClickListener(v -> {
             new LovelyTextInputDialog(this, R.style.EditTextTintTheme)
                     .setTopColorRes(R.color.colorPrimary)
-                    .setTitle("Reset Password")
-                    .setMessage("Enter your email...")
-                    .setIcon(R.drawable.ic_add_friend)
+                    .setTitle(getString(R.string.reset_password))
+                    .setMessage(getString(R.string.enter_your_email))
+                    .setIcon(R.drawable.ic_lock)
                     .setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS)
-                    .setInputFilter("Email not found", new LovelyTextInputDialog.TextFilter() {
-                        @Override
-                        public boolean check(String text) {
-                            Pattern VALID_EMAIL_ADDRESS_REGEX =
-                                    Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
-                            Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(text);
-                            return matcher.find();
-                        }
+                    .setInputFilter(getString(R.string.email_not_found), text -> {
+                        Pattern VALID_EMAIL_ADDRESS_REGEX =
+                                Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+                        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(text);
+                        return matcher.find();
                     })
                     .setConfirmButton(android.R.string.ok, text -> {
                         sendEmailResetPassword(text);
@@ -172,16 +169,16 @@ public class LoginActivity extends Activity
     private void sendEmailResetPassword(String text) {
         waitingDialog.setCancelable(false)
                 .setIcon(R.drawable.ic_add_friend)
-                .setTitle("Sending email...")
+                .setTitle(getString(R.string.sending_email))
                 .setTopColorRes(R.color.colorPrimary)
                 .show();
         mAuth.sendPasswordResetEmail(text)
                 .addOnCompleteListener(task -> {
                     waitingDialog.dismiss();
                     if (task.isSuccessful() && task.isComplete()) {
-                        Toast.makeText(this, "We sent a reset password to your email! Please check your email", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, getString(R.string.we_sent_email_reset_password), Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(this, "Send email fail! Please try again", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, getString(R.string.error_occured_please_try_again), Toast.LENGTH_LONG).show();
                     }
                 });
 
@@ -225,23 +222,20 @@ public class LoginActivity extends Activity
     private void initFirebase() {
         //Khoi tao thanh phan de dang nhap, dang ky
         mAuth = FirebaseAuth.getInstance();
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // User is signed in
-                    StaticConfig.UID = user.getUid();
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
-                    if (firstTimeAccess) {
-                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                        LoginActivity.this.finish();
-                    }
-                } else {
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
+        mAuthListener = firebaseAuth -> {
+            user = firebaseAuth.getCurrentUser();
+            if (user != null) {
+                // User is signed in
+                StaticConfig.UID = user.getUid();
+                Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                if (firstTimeAccess) {
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    LoginActivity.this.finish();
                 }
-                firstTimeAccess = false;
+            } else {
+                Log.d(TAG, "onAuthStateChanged:signed_out");
             }
+            firstTimeAccess = false;
         };
 
         //Khoi tao dialog waiting khi dang nhap
@@ -259,7 +253,7 @@ public class LoginActivity extends Activity
                 finish();
             } else {
                 progressDialog.hide();
-                Toast.makeText(LoginActivity.this, "Email or Password is invalid! Please try again!", Toast.LENGTH_LONG).show();
+                Toast.makeText(LoginActivity.this, getString(R.string.email_password_invalid), Toast.LENGTH_LONG).show();
             }
         });
     }

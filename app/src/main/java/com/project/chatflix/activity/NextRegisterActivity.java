@@ -28,9 +28,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NextRegisterActivity extends AppCompatActivity {
-
-    private static final String TAG = "hello";
-    public static String STR_EXTRA_ACTION_REGISTER = "register";
     private final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
@@ -46,7 +43,11 @@ public class NextRegisterActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_next_register);
+        initView();
+        addEvents();
+    }
 
+    private void initView() {
         auth = FirebaseAuth.getInstance();
 
         txtName = (TextInputLayout) findViewById(R.id.txtName);
@@ -58,9 +59,10 @@ public class NextRegisterActivity extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
         tb = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(tb);
-//        getSupportActionBar().setTitle("Create Account");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
 
+    private void addEvents() {
         btnCreateAcc.setOnClickListener(v -> {
             String name = txtName.getEditText().getText().toString();
             String email = txtEmail.getEditText().getText().toString();
@@ -68,18 +70,17 @@ public class NextRegisterActivity extends AppCompatActivity {
 
             if (!TextUtils.isEmpty(name) || !TextUtils.isEmpty(email) || !TextUtils.isEmpty(password)) {
                 if (validate(email, password, name)) {
-                    progressDialog.setTitle("Register User");
-                    progressDialog.setMessage("Creating user...");
+                    progressDialog.setTitle(getString(R.string.register_user));
+                    progressDialog.setMessage(getString(R.string.creating_user));
                     progressDialog.show();
                     register_user(name, email, password);
                 } else {
-                    Toast.makeText(NextRegisterActivity.this, "Invalid email!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(NextRegisterActivity.this, getString(R.string.invalid_email), Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(NextRegisterActivity.this, "Must fill all requirements!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(NextRegisterActivity.this, getString(R.string.fill_all_requirements), Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 
     private boolean validate(String emailStr, String password, String name) {
@@ -97,15 +98,14 @@ public class NextRegisterActivity extends AppCompatActivity {
                 String uid = current_user.getUid();
 
                 // Lấy từ User, lấy uid
-                database = FirebaseDatabase.getInstance().getReference().child("Users").child(uid);
+                database = FirebaseDatabase.getInstance().getReference().child(getString(R.string.users)).child(uid);
 
                 // Lưu vào database name,status với id mặc định
                 HashMap<String, String> userMap = new HashMap<>();
-                userMap.put("name", name);
-                userMap.put("avatar", "default");
-                userMap.put("email", email);
-                userMap.put("user_id", uid);
-//                    userMap.put("friend","");
+                userMap.put(getString(R.string.name_field), name);
+                userMap.put(getString(R.string.avatar_field), getString(R.string.default_field));
+                userMap.put(getString(R.string.email), email);
+                userMap.put(getString(R.string.user_id), uid);
 
                 database.setValue(userMap).addOnCompleteListener(task1 -> {
                     if (task1.isSuccessful()) {
@@ -113,8 +113,8 @@ public class NextRegisterActivity extends AppCompatActivity {
 
                         Intent intent = new Intent(NextRegisterActivity.this, LoginActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        intent.putExtra("email", email);
-                        intent.putExtra("password", password);
+                        intent.putExtra(getString(R.string.email), email);
+                        intent.putExtra(getString(R.string.password_field), password);
                         startActivity(intent);
                         finish();
                     }
@@ -124,9 +124,6 @@ public class NextRegisterActivity extends AppCompatActivity {
                 progressDialog.hide();
                 FirebaseAuthException e = (FirebaseAuthException) task.getException();
                 Toast.makeText(NextRegisterActivity.this, "Failed Registration: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                Log.e("LoginActivity", "Failed Registration", e);
-                return;
-//                    Toast.makeText(NextRegisterActivity.this,"Failed",Toast.LENGTH_SHORT).show();
             }
         });
 

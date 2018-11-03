@@ -1,23 +1,19 @@
 package com.project.chatflix;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
-
+import android.widget.LinearLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
+import com.project.chatflix.activity.FriendRequestActivity;
 import com.project.chatflix.activity.LoginActivity;
 import com.project.chatflix.adapter.SectionsPagerAdapter;
 import com.project.chatflix.fragment.ChatFragment;
@@ -33,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private SectionsPagerAdapter sectionsPagerAdapter;
     private TabLayout tabLayout;
     private FloatingActionButton floatButton;
-
+    private LinearLayout layoutRequestFriend;
     private FirebaseAuth mAuth;
     private DatabaseReference mUserRef;
 
@@ -41,12 +37,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initView();
+        addEvents();
+    }
 
+    private void initView() {
         tb = (Toolbar) findViewById(R.id.toolbarMain);
         setSupportActionBar(tb);
         getSupportActionBar().setTitle("");
-
-        // Tab Layout
+        layoutRequestFriend = (LinearLayout) findViewById(R.id.layout_request_friend);
         viewPager = (ViewPager) findViewById(R.id.viewPagerMain);
         sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(sectionsPagerAdapter);
@@ -67,47 +66,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser == null) {
-            sendToStart();
-        } else {
-            mUserRef.child("online").setValue("true");
-        }
-        ServiceUtils.stopServiceFriendChat(getApplicationContext(), false);
-
-//        if (getSinchServiceInterface().isStarted()) {
-//
-//            Toast.makeText(MainActivity.this,"Service's still running!",Toast.LENGTH_SHORT).show();
-//        }
-
-//        Toast.makeText(MainActivity.this,"Stop friend chat service",Toast.LENGTH_SHORT).show();
-    }
-
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-//        Toast.makeText(MainActivity.this,"Start friend chat service",Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    protected void onPause() {
-        ServiceUtils.startServiceFriendChat(getApplicationContext());
-//        Toast.makeText(this,"Start friend chat service",Toast.LENGTH_SHORT).show();
-        super.onPause();
-    }
-
-//    @Override
-//    protected void onDestroy() {
-//        if (getSinchServiceInterface() != null) {
-//            getSinchServiceInterface().stopClient();
-//        }
-//        super.onDestroy();
-//    }
-
     private void setupViewPager(ViewPager viewPager) {
         sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         sectionsPagerAdapter.addFrag(new ChatFragment(), getString(R.string.chat));
@@ -116,6 +74,9 @@ public class MainActivity extends AppCompatActivity {
         floatButton.setOnClickListener(((ChatFragment) sectionsPagerAdapter.getItem(0)).onClickFloatButton.getInstance(this));
         viewPager.setAdapter(sectionsPagerAdapter);
         viewPager.setOffscreenPageLimit(3);
+    }
+
+    private void addEvents() {
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -143,6 +104,29 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        layoutRequestFriend.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, FriendRequestActivity.class));
+        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            sendToStart();
+        } else {
+            mUserRef.child("online").setValue("true");
+        }
+        ServiceUtils.stopServiceFriendChat(getApplicationContext(), false);
+
+//        if (getSinchServiceInterface().isStarted()) {
+//
+//            Toast.makeText(MainActivity.this,"Service's still running!",Toast.LENGTH_SHORT).show();
+//        }
+
+//        Toast.makeText(MainActivity.this,"Stop friend chat service",Toast.LENGTH_SHORT).show();
     }
 
     private void sendToStart() {
@@ -150,6 +134,27 @@ public class MainActivity extends AppCompatActivity {
         startActivity(startIntent);
         finish();
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+//        Toast.makeText(MainActivity.this,"Start friend chat service",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onPause() {
+        ServiceUtils.startServiceFriendChat(getApplicationContext());
+//        Toast.makeText(this,"Start friend chat service",Toast.LENGTH_SHORT).show();
+        super.onPause();
+    }
+
+//    @Override
+//    protected void onDestroy() {
+//        if (getSinchServiceInterface() != null) {
+//            getSinchServiceInterface().stopClient();
+//        }
+//        super.onDestroy();
+//    }
 
     @Override
     public void onDestroy() {
