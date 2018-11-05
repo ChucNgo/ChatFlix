@@ -58,13 +58,11 @@ public class FriendChatService extends Service {
         mapQuery = new HashMap<>();
         mapChildEventListenerMap = new HashMap<>();
         listFriend = FriendDB.getInstance(this).getListFriend();
-//        Toast.makeText(this,"Lấy đc ListFriend ròi nè!",Toast.LENGTH_LONG).show();
         listGroup = GroupDB.getInstance(this).getListGroups();
         listKey = new ArrayList<>();
         mapBitmap = new HashMap<>();
 
         if (listFriend.getListFriend().size() > 0 || listGroup.size() > 0) {
-            //Dang ky lang nghe cac room tai day
 
             // Nhận thông báo Friend
             for (final Friend friend : listFriend.getListFriend()) {
@@ -73,16 +71,10 @@ public class FriendChatService extends Service {
                             .child("message/" + friend.idRoom)
                             .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode())).limitToLast(1));
 
-//                    Toast.makeText(this,"Lấy message ròi nè!" + friend.idRoom,Toast.LENGTH_LONG).show();
-
                     mapChildEventListenerMap.put(friend.idRoom, new ChildEventListener() {
                         @Override
                         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                             if (mapMark.get(friend.idRoom) != null && mapMark.get(friend.idRoom)) {
-
-//                                Toast.makeText(getBaseContext(),
-//                                        friend.name + ": " + ((HashMap)dataSnapshot.getValue()).get("text"),
-//                                        Toast.LENGTH_SHORT).show();
 
                                 if (mapBitmap.get(friend.idRoom) == null) {
                                     if (!friend.avatar.equals(StaticConfig.STR_DEFAULT_BASE64)) {

@@ -61,4 +61,19 @@
     <string name="sending_email">Sending email...</string>
     <string name="we_sent_email_reset_password">We sent a reset password to your email! Please check your email</string>
     <string name="email_password_invalid">Email or Password is invalid! Please try again!</string>
+    <string name="add_at_least_two_people">Add at lease two people to create group</string>
+    <string name="enter_group_name">Enter group name</string>
+    <string name="group_id">groupId</string>
+    <string name="editing">Editing....</string>
+    <string name="admin">admin</string>
+    <string name="cannot_connect_database">Cannot connect database</string>
+    <string name="registering">Registering....</string>
+    <string name="edit_group_success">Edit group success</string>
+    <string name="create_group_success">Create group success</string>
+    <string name="create_group_failed">Create group failed!</string>
+    <string name="kind_of_chat">Kind Of Chat</string>
+    <string name="group_chat">GroupChat</string>
+    <string name="edit_group">Edit group</string>
+    <string name="delete_group">Delete group</string>
+    <string name="leave_group">Leave group</string>
 </resources>
