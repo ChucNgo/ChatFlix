@@ -39,7 +39,7 @@ import java.util.Iterator;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener{
+public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private RecyclerView recyclerListGroups;
     public FragGroupClickFloatButton onClickFloatButton;
     private ArrayList<Group> listGroup;
@@ -75,8 +75,6 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         recyclerListGroups.setLayoutManager(layoutManager);
         adapter = new ListGroupsAdapter(getContext(), listGroup);
         recyclerListGroups.setAdapter(adapter);
-
-        //reload lại list tránh add trùng
         mSwipeRefreshLayout.setRefreshing(true);
         getListGroup();
 
@@ -84,39 +82,36 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         progressDialog = new LovelyProgressDialog(getContext())
                 .setCancelable(false)
                 .setIcon(R.drawable.ic_dialog_delete_group)
-                .setTitle("Deleting....")
+                .setTitle(getActivity().getString(R.string.deleting))
                 .setTopColorRes(R.color.colorAccent);
 
         waitingLeavingGroup = new LovelyProgressDialog(getContext())
                 .setCancelable(false)
                 .setIcon(R.drawable.ic_dialog_delete_group)
-                .setTitle("Group leaving....")
+                .setTitle(getActivity().getString(R.string.group_leaving))
                 .setTopColorRes(R.color.colorAccent);
 
-//        if(listGroup.size() == 0){
-        //Ket noi server hien thi group
-
-//        }
         return layout;
     }
 
-    private void getListGroup(){
-        FirebaseDatabase.getInstance().getReference().child("Users/"+ FirebaseAuth.getInstance().getCurrentUser().getUid()
-                + "/group")
+    private void getListGroup() {
+        FirebaseDatabase.getInstance().getReference().child(getActivity().getString(R.string.users) + "/" +
+                FirebaseAuth.getInstance().getCurrentUser().getUid()
+                + "/" + getActivity().getString(R.string.group_field))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        if(dataSnapshot.getValue() != null) {
+                        if (dataSnapshot.getValue() != null) {
                             HashMap mapListGroup = (HashMap) dataSnapshot.getValue();
                             Iterator iterator = mapListGroup.keySet().iterator();
-                            while (iterator.hasNext()){
+                            while (iterator.hasNext()) {
                                 String idGroup = (String) mapListGroup.get(iterator.next().toString());
                                 Group newGroup = new Group();
                                 newGroup.id = idGroup;
                                 listGroup.add(newGroup);
                             }
                             getGroupInfo(0);
-                        }else{
+                        } else {
                             mSwipeRefreshLayout.setRefreshing(false);
                             adapter.notifyDataSetChanged();
                         }
@@ -132,7 +127,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == REQUEST_EDIT_GROUP && resultCode == Activity.RESULT_OK) {
+        if (requestCode == REQUEST_EDIT_GROUP && resultCode == Activity.RESULT_OK) {
             listGroup.clear();
             ListGroupsAdapter.listFriend = null;
             GroupDB.getInstance(getContext()).dropDB();
@@ -140,28 +135,27 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         }
     }
 
-    private void getGroupInfo(final int indexGroup){
-        if(indexGroup == listGroup.size()){
+    private void getGroupInfo(final int indexGroup) {
+        if (indexGroup == listGroup.size()) {
             adapter.notifyDataSetChanged();
             mSwipeRefreshLayout.setRefreshing(false);
-        }else {
-            FirebaseDatabase.getInstance().getReference().child("group/"+listGroup.get(indexGroup).id)
+        } else {
+            FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + listGroup.get(indexGroup).id)
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            if(dataSnapshot.getValue() != null){
+                            if (dataSnapshot.getValue() != null) {
                                 HashMap mapGroup = (HashMap) dataSnapshot.getValue();
-                                ArrayList<String> member = (ArrayList<String>) mapGroup.get("member");
-                                HashMap mapGroupInfo = (HashMap) mapGroup.get("groupInfo");
-                                for(String idMember: member){
+                                ArrayList<String> member = (ArrayList<String>) mapGroup.get(getActivity().getString(R.string.member));
+                                HashMap mapGroupInfo = (HashMap) mapGroup.get(getActivity().getString(R.string.group_info));
+                                for (String idMember : member) {
                                     listGroup.get(indexGroup).member.add(idMember);
                                 }
-                                listGroup.get(indexGroup).groupInfo.put("name", (String) mapGroupInfo.get("name"));
-                                listGroup.get(indexGroup).groupInfo.put("admin", (String) mapGroupInfo.get("admin"));
+                                listGroup.get(indexGroup).groupInfo.put(getActivity().getString(R.string.name_field), (String) mapGroupInfo.get(getActivity().getString(R.string.name_field)));
+                                listGroup.get(indexGroup).groupInfo.put(getActivity().getString(R.string.admin), (String) mapGroupInfo.get(getActivity().getString(R.string.admin)));
                             }
                             GroupDB.getInstance(getContext()).addGroup(listGroup.get(indexGroup));
-                            Log.d("GroupFragment", listGroup.get(indexGroup).id +": " + dataSnapshot.toString());
-                            getGroupInfo(indexGroup +1);
+                            getGroupInfo(indexGroup + 1);
                         }
 
                         @Override
@@ -187,36 +181,36 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         switch (item.getItemId()) {
             case CONTEXT_MENU_DELETE:
                 int posGroup = item.getIntent().getIntExtra(CONTEXT_MENU_KEY_INTENT_DATA_POS, -1);
-                if(((String)listGroup.get(posGroup).groupInfo.get("admin")).equals(FirebaseAuth.getInstance()
+                if (((String) listGroup.get(posGroup).groupInfo.get(getActivity().getString(R.string.admin))).equals(FirebaseAuth.getInstance()
                         .getCurrentUser().getUid())) {
                     Group group = listGroup.get(posGroup);
                     listGroup.remove(posGroup);
-                    if(group != null){
+                    if (group != null) {
                         deleteGroup(group, 0);
                     }
-                }else{
-                    Toast.makeText(getActivity(), "You are not admin", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getActivity(), getActivity().getString(R.string.you_are_not_admin), Toast.LENGTH_LONG).show();
                 }
                 break;
             case CONTEXT_MENU_EDIT:
                 int posGroup1 = item.getIntent().getIntExtra(CONTEXT_MENU_KEY_INTENT_DATA_POS, -1);
-                if(((String)listGroup.get(posGroup1).groupInfo.get("admin")).equals(FirebaseAuth.getInstance()
+                if (((String) listGroup.get(posGroup1).groupInfo.get(getActivity().getString(R.string.admin))).equals(FirebaseAuth.getInstance()
                         .getCurrentUser().getUid())) {
                     Intent intent = new Intent(getContext(), AddGroupActivity.class);
-                    intent.putExtra("groupId", listGroup.get(posGroup1).id);
+                    intent.putExtra(getActivity().getString(R.string.group_id), listGroup.get(posGroup1).id);
                     startActivityForResult(intent, REQUEST_EDIT_GROUP);
-                }else{
-                    Toast.makeText(getActivity(), "You are not admin", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getActivity(), getActivity().getString(R.string.you_are_not_admin), Toast.LENGTH_LONG).show();
                 }
 
                 break;
 
             case CONTEXT_MENU_LEAVE:
                 int position = item.getIntent().getIntExtra(CONTEXT_MENU_KEY_INTENT_DATA_POS, -1);
-                if(((String)listGroup.get(position).groupInfo.get("admin")).equals(FirebaseAuth.getInstance()
+                if (((String) listGroup.get(position).groupInfo.get(getActivity().getString(R.string.admin))).equals(FirebaseAuth.getInstance()
                         .getCurrentUser().getUid())) {
-                    Toast.makeText(getActivity(), "Admin cannot leave group", Toast.LENGTH_LONG).show();
-                }else{
+                    Toast.makeText(getActivity(), getActivity().getString(R.string.admin_cannot_leave_group), Toast.LENGTH_LONG).show();
+                } else {
                     waitingLeavingGroup.show();
                     Group groupLeaving = listGroup.get(position);
                     leaveGroup(groupLeaving);
@@ -227,63 +221,52 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         return super.onContextItemSelected(item);
     }
 
-    public void deleteGroup(final Group group, final int index){
-        if(index == group.member.size()){
-            FirebaseDatabase.getInstance().getReference().child("group/"+group.id).removeValue()
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            progressDialog.dismiss();
-                            GroupDB.getInstance(getContext()).deleteGroup(group.id);
-                            listGroup.remove(group);
-                            adapter.notifyDataSetChanged();
-                            Toast.makeText(getContext(), "Deleted group", Toast.LENGTH_SHORT).show();
-                        }
+    public void deleteGroup(final Group group, final int index) {
+        if (index == group.member.size()) {
+            FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + group.id).removeValue()
+                    .addOnCompleteListener(task -> {
+                        progressDialog.dismiss();
+                        GroupDB.getInstance(getContext()).deleteGroup(group.id);
+                        listGroup.remove(group);
+                        adapter.notifyDataSetChanged();
+                        Toast.makeText(getContext(), getActivity().getString(R.string.group_deleted), Toast.LENGTH_SHORT).show();
                     })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            progressDialog.dismiss();
-                            new LovelyInfoDialog(getContext())
-                                    .setTopColorRes(R.color.colorAccent)
-                                    .setIcon(R.drawable.ic_dialog_delete_group)
-                                    .setTitle("False")
-                                    .setMessage("Cannot delete group right now, please try again.")
-                                    .setCancelable(false)
-                                    .setConfirmButtonText("Ok")
-                                    .show();
-                        }
+                    .addOnFailureListener(e -> {
+                        progressDialog.dismiss();
+                        new LovelyInfoDialog(getContext())
+                                .setTopColorRes(R.color.colorAccent)
+                                .setIcon(R.drawable.ic_dialog_delete_group)
+                                .setTitle(getActivity().getString(R.string.failed))
+                                .setMessage(getActivity().getString(R.string.error_occured_please_try_again))
+                                .setCancelable(false)
+                                .setConfirmButtonText(getActivity().getString(R.string.ok))
+                                .show();
                     })
             ;
-        }else{
-            FirebaseDatabase.getInstance().getReference().child("Users/"+group.member.get(index)+"/group/"+group.id).removeValue()
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            deleteGroup(group, index + 1);
-                        }
+        } else {
+            FirebaseDatabase.getInstance().getReference()
+                    .child(getActivity().getString(R.string.users) + "/" + group.member.get(index) + "/group/" + group.id).removeValue()
+                    .addOnCompleteListener(task -> {
+                        deleteGroup(group, index + 1);
                     })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            progressDialog.dismiss();
-                            new LovelyInfoDialog(getContext())
-                                    .setTopColorRes(R.color.colorAccent)
-                                    .setIcon(R.drawable.ic_dialog_delete_group)
-                                    .setTitle("False")
-                                    .setMessage("Cannot connect server")
-                                    .setCancelable(false)
-                                    .setConfirmButtonText("Ok")
-                                    .show();
-                        }
+                    .addOnFailureListener(e -> {
+                        progressDialog.dismiss();
+                        new LovelyInfoDialog(getContext())
+                                .setTopColorRes(R.color.colorAccent)
+                                .setIcon(R.drawable.ic_dialog_delete_group)
+                                .setTitle(getActivity().getString(R.string.failed))
+                                .setMessage(getActivity().getString(R.string.error_occured_please_try_again))
+                                .setCancelable(false)
+                                .setConfirmButtonText(getActivity().getString(R.string.ok))
+                                .show();
                     })
             ;
         }
 
     }
 
-    public void leaveGroup(final Group group){
-        FirebaseDatabase.getInstance().getReference().child("group/"+group.id+"/member")
+    public void leaveGroup(final Group group) {
+        FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + group.id + "/" + getActivity().getString(R.string.member))
                 .orderByValue().equalTo(FirebaseAuth.getInstance().getCurrentUser().getUid())
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -294,48 +277,43 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                             waitingLeavingGroup.dismiss();
                             new LovelyInfoDialog(getContext())
                                     .setTopColorRes(R.color.colorAccent)
-                                    .setTitle("Error")
-                                    .setMessage("Error occurred during leaving group")
+                                    .setTitle(getActivity().getString(R.string.error))
+                                    .setMessage(getActivity().getString(R.string.error_occured_please_try_again))
                                     .show();
                         } else {
                             String memberIndex = "";
-                            ArrayList<String> result = ((ArrayList<String>)dataSnapshot.getValue());
-                            for(int i = 0; i < result.size(); i++){
-                                if(result.get(i) != null){
+                            ArrayList<String> result = ((ArrayList<String>) dataSnapshot.getValue());
+                            for (int i = 0; i < result.size(); i++) {
+                                if (result.get(i) != null) {
                                     memberIndex = String.valueOf(i);
                                 }
                             }
 
-                            FirebaseDatabase.getInstance().getReference().child("Users")
+                            FirebaseDatabase.getInstance().getReference().child(getActivity().getString(R.string.users))
                                     .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                                    .child("group").child(group.id).removeValue();
-                            FirebaseDatabase.getInstance().getReference().child("group/"+group.id+"/member")
+                                    .child(getString(R.string.group_table)).child(group.id).removeValue();
+                            FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + group.id)
+                                    .child(getActivity().getString(R.string.member))
                                     .child(memberIndex).removeValue()
-                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> task) {
-                                            waitingLeavingGroup.dismiss();
+                                    .addOnCompleteListener(task -> {
+                                        waitingLeavingGroup.dismiss();
 
-                                            listGroup.remove(group);
-                                            adapter.notifyDataSetChanged();
-                                            GroupDB.getInstance(getContext()).deleteGroup(group.id);
-                                            new LovelyInfoDialog(getContext())
-                                                    .setTopColorRes(R.color.colorAccent)
-                                                    .setTitle("Success")
-                                                    .setMessage("Group leaving successfully")
-                                                    .show();
-                                        }
+                                        listGroup.remove(group);
+                                        adapter.notifyDataSetChanged();
+                                        GroupDB.getInstance(getContext()).deleteGroup(group.id);
+                                        new LovelyInfoDialog(getContext())
+                                                .setTopColorRes(R.color.colorAccent)
+                                                .setTitle(getActivity().getString(R.string.success))
+                                                .setMessage(getActivity().getString(R.string.group_leaving_successfully))
+                                                .show();
                                     })
-                                    .addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            waitingLeavingGroup.dismiss();
-                                            new LovelyInfoDialog(getContext())
-                                                    .setTopColorRes(R.color.colorAccent)
-                                                    .setTitle("Error")
-                                                    .setMessage("Error occurred during leaving group")
-                                                    .show();
-                                        }
+                                    .addOnFailureListener(e -> {
+                                        waitingLeavingGroup.dismiss();
+                                        new LovelyInfoDialog(getContext())
+                                                .setTopColorRes(R.color.colorAccent)
+                                                .setTitle(getActivity().getString(R.string.error))
+                                                .setMessage(getActivity().getString(R.string.error_occured_please_try_again))
+                                                .show();
                                     });
                         }
                     }
@@ -346,18 +324,19 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                         waitingLeavingGroup.dismiss();
                         new LovelyInfoDialog(getContext())
                                 .setTopColorRes(R.color.colorAccent)
-                                .setTitle("Error")
-                                .setMessage("Error occurred during leaving group")
+                                .setTitle(getActivity().getString(R.string.error))
+                                .setMessage(getActivity().getString(R.string.error_occured_please_try_again))
                                 .show();
                     }
                 });
 
     }
 
-    public class FragGroupClickFloatButton implements View.OnClickListener{
+    public class FragGroupClickFloatButton implements View.OnClickListener {
 
         Context context;
-        public FragGroupClickFloatButton getInstance(Context context){
+
+        public FragGroupClickFloatButton getInstance(Context context) {
             this.context = context;
             return this;
         }

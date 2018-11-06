@@ -68,7 +68,7 @@ public class FriendChatService extends Service {
             for (final Friend friend : listFriend.getListFriend()) {
                 if (!listKey.contains(friend.idRoom)) {
                     mapQuery.put(friend.idRoom, FirebaseDatabase.getInstance().getReference()
-                            .child("message/" + friend.idRoom)
+                            .child("Message/" + friend.idRoom)
                             .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode())).limitToLast(1));
 
                     mapChildEventListenerMap.put(friend.idRoom, new ChildEventListener() {
@@ -88,10 +88,9 @@ public class FriendChatService extends Service {
                                     }
                                 }
 
-//                                Toast.makeText(getBaseContext(),"Cbi tạo noti ròi nè!",Toast.LENGTH_LONG).show();
                                 if (ChatActivity.isActive == false) {
                                     createNotify(friend.name, (String) ((HashMap) dataSnapshot.getValue())
-                                                    .get("text"),
+                                                    .get(getString(R.string.text)),
                                             friend.idRoom.hashCode(), mapBitmap.get(friend.idRoom),
                                             false);
                                 }
@@ -127,7 +126,6 @@ public class FriendChatService extends Service {
 
                         }
                     });
-//                    Toast.makeText(this,"add key idroom vào listfriend",Toast.LENGTH_LONG).show();
                     listKey.add(friend.idRoom);
                 }
                 mapQuery.get(friend.idRoom).addChildEventListener(
@@ -138,7 +136,7 @@ public class FriendChatService extends Service {
             for (final Group group : listGroup) {
                 if (!listKey.contains(group.id)) {
                     mapQuery.put(group.id, FirebaseDatabase.getInstance().getReference()
-                            .child("message/" + group.id).limitToLast(1));
+                            .child("Message/" + group.id).limitToLast(1));
 
                     mapChildEventListenerMap.put(group.id, new ChildEventListener() {
                         @Override
@@ -151,9 +149,9 @@ public class FriendChatService extends Service {
                                             R.drawable.ic_notify_group));
                                 }
                                 if (ChatActivity.isActive == false){
-                                    createNotify(group.groupInfo.get("name"),
+                                    createNotify(group.groupInfo.get(getString(R.string.name_field)),
                                             (String) ((HashMap) dataSnapshot.getValue())
-                                                    .get("text"), group.id.hashCode(), mapBitmap.get(group.id) ,
+                                                    .get(getString(R.string.text)), group.id.hashCode(), mapBitmap.get(group.id) ,
                                             true);
                                 }
 

@@ -50,7 +50,7 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
         switch (position){
             case 0:
-                return "CHATS";
+                return "CHAT";
             case 1:
                 return "GROUP";
             case 2:

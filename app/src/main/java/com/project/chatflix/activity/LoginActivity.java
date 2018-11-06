@@ -227,18 +227,13 @@ public class LoginActivity extends Activity
             if (user != null) {
                 // User is signed in
                 StaticConfig.UID = user.getUid();
-                Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                 if (firstTimeAccess) {
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     LoginActivity.this.finish();
                 }
-            } else {
-                Log.d(TAG, "onAuthStateChanged:signed_out");
             }
             firstTimeAccess = false;
         };
-
-        //Khoi tao dialog waiting khi dang nhap
         waitingDialog = new LovelyProgressDialog(this).setCancelable(false);
     }
 

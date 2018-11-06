@@ -67,7 +67,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_friend, parent, false);
-        return new ItemFriendViewHolder(context, view);
+        return new ItemFriendViewHolder(view);
     }
 
     @Override
@@ -78,14 +78,13 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         final String avatar = listFriend.getListFriend().get(position).avatar;
         ((ItemFriendViewHolder) holder).txtName.setText(name);
 
-
         ((View) ((ItemFriendViewHolder) holder).txtName.getParent().getParent().getParent())
                 .setOnClickListener(v -> {
                     ((ItemFriendViewHolder) holder).txtMessage.setTypeface(Typeface.DEFAULT);
                     ((ItemFriendViewHolder) holder).txtName.setTypeface(Typeface.DEFAULT);
                     Intent intent = new Intent(context, ChatActivity.class);
                     intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, name);
-                    intent.putExtra("Kind Of Chat", "FriendChat");
+                    intent.putExtra(context.getString(R.string.kind_of_chat), context.getString(R.string.friend_chat));
                     ArrayList<CharSequence> idFriend = new ArrayList<CharSequence>();
                     idFriend.add(id);
                     intent.putCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID, idFriend);
@@ -109,13 +108,13 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     String friendName = (String) ((ItemFriendViewHolder) holder).txtName.getText();
 
                     new AlertDialog.Builder(context)
-                            .setTitle("Delete Friend")
-                            .setMessage("Are you sure want to delete " + friendName + "?")
+                            .setTitle(context.getString(R.string.delete_friend))
+                            .setMessage(context.getString(R.string.are_you_sure_to_delete) + friendName + "?")
                             .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
                                 dialogInterface.dismiss();
                                 final String idFriendRemoval = listFriend.getListFriend()
                                         .get(position).id;
-                                dialogWaitDeleting.setTitle("Deleting...")
+                                dialogWaitDeleting.setTitle(context.getString(R.string.deleting))
                                         .setCancelable(false)
                                         .setTopColorRes(R.color.colorAccent)
                                         .show();
@@ -160,7 +159,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             ((ItemFriendViewHolder) holder).txtTime.setVisibility(View.GONE);
             if (mapQuery.get(id) == null && mapChildListener.get(id) == null) {
                 mapQuery.put(id, FirebaseDatabase.getInstance().getReference()
-                        .child("message/" + idRoom)
+                        .child("Message/" + idRoom)
                         .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode()))
                         .limitToLast(1));
                 try {
@@ -171,18 +170,18 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                             if (mapMark.get(id) != null) {
                                 if (!mapMark.get(id)) {
                                     listFriend.getListFriend()
-                                            .get(position).message.text = id + mapMessage.get("text");
+                                            .get(position).message.text = id + mapMessage.get(context.getString(R.string.text));
                                 } else {
                                     listFriend.getListFriend()
-                                            .get(position).message.text = (String) mapMessage.get("text");
+                                            .get(position).message.text = (String) mapMessage.get(context.getString(R.string.text));
                                 }
                                 notifyDataSetChanged();
                                 mapMark.put(id, false);
                             } else {
-                                listFriend.getListFriend().get(position).message.text = (String) mapMessage.get("text");
+                                listFriend.getListFriend().get(position).message.text = (String) mapMessage.get(context.getString(R.string.text));
                                 notifyDataSetChanged();
                             }
-                            listFriend.getListFriend().get(position).message.timestamp = (long) mapMessage.get("timestamp");
+                            listFriend.getListFriend().get(position).message.timestamp = (long) mapMessage.get(context.getString(R.string.timestamp));
                         }
 
                         @Override
@@ -233,8 +232,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             mapChildListenerOnline.put(id, new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                    if (dataSnapshot.getValue() != null && dataSnapshot.getKey().equals("isOnline")) {
-                        Log.d("ChatFragment add " + id, (boolean) dataSnapshot.getValue() + "");
+                    if (dataSnapshot.getValue() != null && dataSnapshot.getKey().equals(context.getString(R.string.is_online))) {
                         listFriend.getListFriend().get(position).status.isOnline = (boolean) dataSnapshot.getValue();
                         notifyDataSetChanged();
                     }
@@ -242,8 +240,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
                 @Override
                 public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                    if (dataSnapshot.getValue() != null && dataSnapshot.getKey().equals("isOnline")) {
-                        Log.d("ChatFragment change " + id, (boolean) dataSnapshot.getValue() + "");
+                    if (dataSnapshot.getValue() != null && dataSnapshot.getKey().equals(context.getString(R.string.is_online))) {
                         listFriend.getListFriend().get(position).status.isOnline = (boolean) dataSnapshot.getValue();
                         notifyDataSetChanged();
                     }
@@ -273,24 +270,16 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             ((ItemFriendViewHolder) holder).avata.setBorderWidth(0);
         }
 
-        FirebaseDatabase.getInstance().getReference().child("Users").child(id)
+        FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users)).child(id)
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-
-
-                        if (dataSnapshot.hasChild("online")) {
-
-                            String userOnline = dataSnapshot.child("online").getValue().toString();
-
-                            if (userOnline.equals("true")) {
-
+                        if (dataSnapshot.hasChild(context.getString(R.string.online))) {
+                            String userOnline = dataSnapshot.child(context.getString(R.string.online)).getValue().toString();
+                            if (userOnline.equals(context.getString(R.string.true_field))) {
                                 ((ItemFriendViewHolder) holder).imgOnline.setVisibility(View.VISIBLE);
-
                             } else {
-
                                 ((ItemFriendViewHolder) holder).imgOnline.setVisibility(View.INVISIBLE);
-
                             }
                         }
                     }
@@ -315,58 +304,54 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
      */
     private void deleteFriend(final String idFriend) {
         if (idFriend != null) {
-            Log.e("id", "idFriend : " + idFriend);
             final FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-            FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser.getUid())
-                    .child("friend").child("")
-                    .orderByValue().equalTo(idFriend).addListenerForSingleValueEvent(new ValueEventListener() {
+            FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users)).child(currentUser.getUid())
+                    .child(context.getString(R.string.friend_field)).orderByValue().equalTo(idFriend)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-
                     if (dataSnapshot.getValue() == null) {
-                        //email not found
                         dialogWaitDeleting.dismiss();
                         new LovelyInfoDialog(context)
                                 .setTopColorRes(R.color.colorAccent)
-                                .setTitle("Error")
-                                .setMessage("Error occurred during deleting friend")
+                                .setTitle(context.getString(R.string.error))
+                                .setMessage(context.getString(R.string.error_delete_friend))
                                 .show();
                     } else {
                         String idRemoval = ((HashMap) dataSnapshot.getValue()).keySet().iterator()
                                 .next().toString();
-                        FirebaseDatabase.getInstance().getReference().child("Users")
-                                .child(currentUser.getUid()).child("friend").child("")
+                        FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
+                                .child(currentUser.getUid()).child(context.getString(R.string.friend_field))
                                 .child(idRemoval).removeValue()
                                 .addOnCompleteListener(task -> {
                                     dialogWaitDeleting.dismiss();
 
                                     new LovelyInfoDialog(context)
                                             .setTopColorRes(R.color.colorAccent)
-                                            .setTitle("Success")
-                                            .setMessage("Friend deleting successfully")
+                                            .setTitle(context.getString(R.string.success))
+                                            .setMessage(context.getString(R.string.delete_friend_successfully))
                                             .show();
 
                                     Intent intentDeleted = new Intent(ChatFragment.ACTION_DELETE_FRIEND);
-                                    intentDeleted.putExtra("idFriend", idFriend);
+                                    intentDeleted.putExtra(context.getString(R.string.id_friend), idFriend);
                                     context.sendBroadcast(intentDeleted);
                                 })
                                 .addOnFailureListener(e -> {
                                     dialogWaitDeleting.dismiss();
                                     new LovelyInfoDialog(context)
                                             .setTopColorRes(R.color.colorAccent)
-                                            .setTitle("Error")
-                                            .setMessage("Error occurred during deleting friend")
+                                            .setTitle(context.getString(R.string.error))
+                                            .setMessage(context.getString(R.string.error_delete_friend))
                                             .show();
                                 });
-                        FirebaseDatabase.getInstance().getReference().child("Users").child(idFriend).child("friend")
-                                .child("")
-                                .orderByValue().equalTo(currentUser.getUid())
+                        FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
+                                .child(idFriend).child(context.getString(R.string.friend_field)).orderByValue().equalTo(currentUser.getUid())
                                 .addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
                                         String idRemoval = ((HashMap) dataSnapshot.getValue()).keySet().iterator().next().toString();
-                                        FirebaseDatabase.getInstance().getReference().child("Users").child(idFriend)
-                                                .child("friend").child("")
+                                        FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
+                                                .child(idFriend).child(context.getString(R.string.friend_field))
                                                 .child(idRemoval).removeValue();
                                     }
 
@@ -376,13 +361,13 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                                     }
                                 });
 
-                        FirebaseDatabase.getInstance().getReference().child("message")
+                        FirebaseDatabase.getInstance().getReference().child("Message")
                                 .child(String.valueOf(idFriend.hashCode()))
                                 .child("")
                                 .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode()))
                                 .removeValue();
 
-                        FirebaseDatabase.getInstance().getReference().child("message")
+                        FirebaseDatabase.getInstance().getReference().child("Message")
                                 .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode()))
                                 .child("")
                                 .child(String.valueOf(idFriend.hashCode())).removeValue();
@@ -398,8 +383,8 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             dialogWaitDeleting.dismiss();
             new LovelyInfoDialog(context)
                     .setTopColorRes(R.color.colorPrimary)
-                    .setTitle("Error")
-                    .setMessage("Error occurred during deleting friend")
+                    .setTitle(context.getString(R.string.error))
+                    .setMessage(context.getString(R.string.error_delete_friend))
                     .show();
         }
     }
@@ -409,16 +394,13 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         public TextView txtName, txtTime, txtMessage;
         public ImageView imgOnline;
 
-        private Context context;
-
-        ItemFriendViewHolder(Context context, View itemView) {
+        ItemFriendViewHolder(View itemView) {
             super(itemView);
             avata = (CircleImageView) itemView.findViewById(R.id.icon_avata);
             txtName = (TextView) itemView.findViewById(R.id.txtName);
             txtTime = (TextView) itemView.findViewById(R.id.txtTime);
             txtMessage = (TextView) itemView.findViewById(R.id.txtMessage);
             imgOnline = (ImageView) itemView.findViewById(R.id.user_single_online_icon);
-            this.context = context;
         }
 
     }

@@ -123,7 +123,7 @@ public class NextRegisterActivity extends AppCompatActivity {
             } else {
                 progressDialog.hide();
                 FirebaseAuthException e = (FirebaseAuthException) task.getException();
-                Toast.makeText(NextRegisterActivity.this, "Failed Registration: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(NextRegisterActivity.this, getString(R.string.failed_registration) + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 

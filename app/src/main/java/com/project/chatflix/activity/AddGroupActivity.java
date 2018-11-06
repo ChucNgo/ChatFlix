@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
@@ -26,6 +27,7 @@ import com.project.chatflix.object.Room;
 import com.project.chatflix.utils.StaticConfig;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -130,7 +132,7 @@ public class AddGroupActivity extends AppCompatActivity {
         }
         room.groupInfo.put(getString(R.string.name_field), editTextGroupName.getText().toString());
         room.groupInfo.put(getString(R.string.admin), FirebaseAuth.getInstance().getCurrentUser().getUid());
-        FirebaseDatabase.getInstance().getReference().child("group/" + idGroup).setValue(room)
+        FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + idGroup).setValue(room)
                 .addOnCompleteListener(task -> {
                     addRoomForUser(idGroup, 0);
                 })
@@ -173,7 +175,7 @@ public class AddGroupActivity extends AppCompatActivity {
         }
         room.groupInfo.put(getString(R.string.name_field), editTextGroupName.getText().toString());
         room.groupInfo.put(getString(R.string.admin), FirebaseAuth.getInstance().getCurrentUser().getUid());
-        FirebaseDatabase.getInstance().getReference().child("group/" + idGroup).setValue(room)
+        FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + idGroup).setValue(room)
                 .addOnCompleteListener(task -> {
                     addRoomForUser(idGroup, 0);
                 });
@@ -187,7 +189,7 @@ public class AddGroupActivity extends AppCompatActivity {
             AddGroupActivity.this.finish();
         } else {
             FirebaseDatabase.getInstance().getReference()
-                    .child("Users/" + listIDRemove.toArray()[userIndex] + "/group/" + roomId).removeValue()
+                    .child(getString(R.string.users) + "/" + listIDRemove.toArray()[userIndex] + "/group/" + roomId).removeValue()
                     .addOnCompleteListener(task -> {
                         deleteRoomForUser(roomId, userIndex + 1);
                     })
@@ -229,7 +231,7 @@ public class AddGroupActivity extends AppCompatActivity {
                 deleteRoomForUser(roomId, 0);
             }
         } else {
-            FirebaseDatabase.getInstance().getReference().child("Users/" + listIDChoose.toArray()[userIndex] + "/group/" + roomId)
+            FirebaseDatabase.getInstance().getReference().child(getString(R.string.users) + "/" + listIDChoose.toArray()[userIndex] + "/group/" + roomId)
                     .setValue(roomId)
                     .addOnCompleteListener(task -> {
                         addRoomForUser(roomId, userIndex + 1);

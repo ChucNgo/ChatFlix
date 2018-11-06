@@ -137,7 +137,7 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
                                 .setTopColorRes(R.color.colorPrimary)
                                 .setIcon(R.drawable.ic_pass_reset)
                                 .setTitle(context.getString(R.string.password_recovery))
-                                .setMessage("Sent email to " + email)
+                                .setMessage(context.getString(R.string.email_sent_to)+ email)
                                 .setConfirmButtonText(context.getString(R.string.ok))
                                 .show();
                     }
@@ -158,7 +158,7 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
                                 .setTopColorRes(R.color.colorAccent)
                                 .setIcon(R.drawable.ic_pass_reset)
                                 .setTitle(context.getString(R.string.failed))
-                                .setMessage("False to sent email to " + email)
+                                .setMessage(context.getString(R.string.cannot_send_email_to) + email)
                                 .setConfirmButtonText(context.getString(R.string.ok))
                                 .show();
                     }

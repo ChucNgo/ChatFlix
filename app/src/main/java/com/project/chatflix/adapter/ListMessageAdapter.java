@@ -66,7 +66,7 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             // Friend gửi ảnh
             if (mess != null) {
-                if (mess_type.equals("image")) {
+                if (mess_type.equals(context.getString(R.string.image_field))) {
                     ((ItemMessageFriendHolder) holder).viewCallFriend.setVisibility(View.GONE);
                     ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.INVISIBLE);
                     ((ItemMessageFriendHolder) holder).imgFriend.setVisibility(View.VISIBLE);
@@ -88,7 +88,7 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 //
 //                    String imageBase64 = ImageUtils.encodeBase64(liteImage);
 
-                } else if (mess_type.equals("call")) {
+                } else if (mess_type.equals(context.getString(R.string.call_field))) {
 
                     ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.GONE);
                     ((ItemMessageFriendHolder) holder).imgFriend.setVisibility(View.GONE);
@@ -117,7 +117,7 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 final String id = conversation.getListMessageData().get(position).idSender;
                 if (bitmapAvataDB.get(id) == null) {
                     bitmapAvataDB.put(id, FirebaseDatabase.getInstance().getReference()
-                            .child("Users/" + id + "/avatar"));
+                            .child(context.getString(R.string.users) + "/" + id + "/" + context.getString(R.string.avatar_field)));
                     bitmapAvataDB.get(id).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -151,7 +151,7 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             // User gửi ảnh
             if (mess != null) {
-                if (mess_type.equals("image")) {
+                if (mess_type.equals(context.getString(R.string.image_field))) {
                     ((ItemMessageUserHolder) holder).viewCallUser.setVisibility(View.GONE);
                     ((ItemMessageUserHolder) holder).txtContent.setVisibility(View.INVISIBLE);
                     ((ItemMessageUserHolder) holder).imgUser.setVisibility(View.VISIBLE);
@@ -162,7 +162,7 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                             .into(((ItemMessageUserHolder) holder).imgUser);
 
 
-                } else if (mess_type.equals("call")) {
+                } else if (mess_type.equals(context.getString(R.string.call_field))) {
 
                     ((ItemMessageUserHolder) holder).txtContent.setVisibility(View.GONE);
                     ((ItemMessageUserHolder) holder).imgUser.setVisibility(View.GONE);
