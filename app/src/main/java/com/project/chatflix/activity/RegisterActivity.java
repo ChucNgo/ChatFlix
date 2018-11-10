@@ -3,19 +3,13 @@ package com.project.chatflix.activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseUser;
@@ -27,7 +21,7 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class NextRegisterActivity extends AppCompatActivity {
+public class RegisterActivity extends AppCompatActivity {
     private final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
@@ -42,22 +36,23 @@ public class NextRegisterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_next_register);
+        setContentView(R.layout.activity_register);
         initView();
         addEvents();
     }
 
     private void initView() {
+        getWindow().setBackgroundDrawableResource(R.drawable.new_background);
         auth = FirebaseAuth.getInstance();
 
-        txtName = (TextInputLayout) findViewById(R.id.txtName);
-        txtEmail = (TextInputLayout) findViewById(R.id.txtEmail);
-        txtPassword = (TextInputLayout) findViewById(R.id.txtPassword);
+        txtName = findViewById(R.id.txtName);
+        txtEmail = findViewById(R.id.txtEmail);
+        txtPassword = findViewById(R.id.txtPassword);
 
-        btnCreateAcc = (Button) findViewById(R.id.btnCreateAcc);
+        btnCreateAcc = findViewById(R.id.btnCreateAcc);
 
         progressDialog = new ProgressDialog(this);
-        tb = (Toolbar) findViewById(R.id.toolbar);
+        tb = findViewById(R.id.toolbar);
         setSupportActionBar(tb);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
@@ -75,10 +70,10 @@ public class NextRegisterActivity extends AppCompatActivity {
                     progressDialog.show();
                     register_user(name, email, password);
                 } else {
-                    Toast.makeText(NextRegisterActivity.this, getString(R.string.invalid_email), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RegisterActivity.this, getString(R.string.invalid_email), Toast.LENGTH_SHORT).show();
                 }
             } else {
-                Toast.makeText(NextRegisterActivity.this, getString(R.string.fill_all_requirements), Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, getString(R.string.fill_all_requirements), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -111,7 +106,7 @@ public class NextRegisterActivity extends AppCompatActivity {
                     if (task1.isSuccessful()) {
                         progressDialog.dismiss();
 
-                        Intent intent = new Intent(NextRegisterActivity.this, LoginActivity.class);
+                        Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         intent.putExtra(getString(R.string.email), email);
                         intent.putExtra(getString(R.string.password_field), password);
@@ -123,7 +118,7 @@ public class NextRegisterActivity extends AppCompatActivity {
             } else {
                 progressDialog.hide();
                 FirebaseAuthException e = (FirebaseAuthException) task.getException();
-                Toast.makeText(NextRegisterActivity.this, getString(R.string.failed_registration) + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, getString(R.string.failed_registration) + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 

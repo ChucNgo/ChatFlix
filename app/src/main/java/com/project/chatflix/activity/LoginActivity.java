@@ -6,10 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.text.InputType;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -43,8 +41,6 @@ public class LoginActivity extends Activity
 
     private final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
-    private static String TAG = "LoginActivity";
-    // progress dialog
     private ProgressDialog progressDialog;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -56,12 +52,6 @@ public class LoginActivity extends Activity
     private LovelyProgressDialog waitingDialog;
     private ImageView imgRemember;
     private Button btnForgotPassword;
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mAuth.addAuthStateListener(mAuthListener);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,23 +67,21 @@ public class LoginActivity extends Activity
             txtEmailLogin.setText(email);
             txtPasswordLogin.setText(password);
         }
-
-
         firstTimeAccess = true;
         initFirebase();
-
     }
 
-    /**
-     * Khởi tạo các thành phần cần thiết cho việc quản lý đăng nhập
-     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
+
     private void initFirebase() {
-        //Khoi tao thanh phan de dang nhap, dang ky
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = firebaseAuth -> {
             user = firebaseAuth.getCurrentUser();
             if (user != null) {
-                // User is signed in
                 StaticConfig.UID = user.getUid();
                 if (firstTimeAccess) {
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
@@ -102,7 +90,6 @@ public class LoginActivity extends Activity
             }
             firstTimeAccess = false;
         };
-        waitingDialog = new LovelyProgressDialog(this).setCancelable(false);
     }
 
     private void initView() {
@@ -111,18 +98,20 @@ public class LoginActivity extends Activity
         mAuth = FirebaseAuth.getInstance();
         progressDialog = new ProgressDialog(this);
         waitingDialog = new LovelyProgressDialog(this);
-        txtEmailLogin = (EditText) findViewById(R.id.txtEmailLogin);
-        txtPasswordLogin = (EditText) findViewById(R.id.txtPasswordLogin);
-        btnSignup = (Button) findViewById(R.id.txtSignup);
-        btnReg = (Button) findViewById(R.id.btnReg);
-        layoutRememberLogin = (LinearLayout) findViewById(R.id.layout_remember_login);
-        imgRemember = (ImageView) findViewById(R.id.radioButton);
-        btnForgotPassword = (Button) findViewById(R.id.btnForgotPassword);
+        txtEmailLogin = findViewById(R.id.txtEmailLogin);
+        txtPasswordLogin = findViewById(R.id.txtPasswordLogin);
+        btnSignup = findViewById(R.id.txtSignup);
+        btnReg = findViewById(R.id.btnReg);
+        layoutRememberLogin = findViewById(R.id.layout_remember_login);
+        imgRemember = findViewById(R.id.radioButton);
+        btnForgotPassword = findViewById(R.id.btnForgotPassword);
+
+        waitingDialog = new LovelyProgressDialog(this).setCancelable(false);
     }
 
     private void addEvent() {
         btnReg.setOnClickListener(v -> {
-            Intent reg_intent = new Intent(LoginActivity.this, NextRegisterActivity.class);
+            Intent reg_intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(reg_intent);
         });
 
