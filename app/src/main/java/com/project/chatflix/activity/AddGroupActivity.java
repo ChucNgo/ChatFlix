@@ -57,7 +57,7 @@ public class AddGroupActivity extends AppCompatActivity {
         listIDChoose = new HashSet<>();
         listIDRemove = new HashSet<>();
 //        listIDChoose.add(StaticConfig.UID);
-        listIDChoose.add(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        listIDChoose.add(StaticConfig.UID);
         btnAddGroup = (LinearLayout) findViewById(R.id.btnAddGroup);
         editTextGroupName = (EditText) findViewById(R.id.editGroupName);
         txtGroupIcon = (TextView) findViewById(R.id.icon_group);
@@ -131,7 +131,7 @@ public class AddGroupActivity extends AppCompatActivity {
             room.member.add(id);
         }
         room.groupInfo.put(getString(R.string.name_field), editTextGroupName.getText().toString());
-        room.groupInfo.put(getString(R.string.admin), FirebaseAuth.getInstance().getCurrentUser().getUid());
+        room.groupInfo.put(getString(R.string.admin), StaticConfig.UID);
         FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + idGroup).setValue(room)
                 .addOnCompleteListener(task -> {
                     addRoomForUser(idGroup, 0);
@@ -174,7 +174,7 @@ public class AddGroupActivity extends AppCompatActivity {
             room.member.add(id);
         }
         room.groupInfo.put(getString(R.string.name_field), editTextGroupName.getText().toString());
-        room.groupInfo.put(getString(R.string.admin), FirebaseAuth.getInstance().getCurrentUser().getUid());
+        room.groupInfo.put(getString(R.string.admin), StaticConfig.UID);
         FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + idGroup).setValue(room)
                 .addOnCompleteListener(task -> {
                     addRoomForUser(idGroup, 0);

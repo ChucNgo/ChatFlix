@@ -58,6 +58,12 @@ public class LoginActivity extends Activity
     private Button btnForgotPassword;
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
@@ -76,6 +82,27 @@ public class LoginActivity extends Activity
         firstTimeAccess = true;
         initFirebase();
 
+    }
+
+    /**
+     * Khởi tạo các thành phần cần thiết cho việc quản lý đăng nhập
+     */
+    private void initFirebase() {
+        //Khoi tao thanh phan de dang nhap, dang ky
+        mAuth = FirebaseAuth.getInstance();
+        mAuthListener = firebaseAuth -> {
+            user = firebaseAuth.getCurrentUser();
+            if (user != null) {
+                // User is signed in
+                StaticConfig.UID = user.getUid();
+                if (firstTimeAccess) {
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    LoginActivity.this.finish();
+                }
+            }
+            firstTimeAccess = false;
+        };
+        waitingDialog = new LovelyProgressDialog(this).setCancelable(false);
     }
 
     private void initView() {
@@ -213,28 +240,6 @@ public class LoginActivity extends Activity
     private boolean validate(String emailStr, String password) {
         Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailStr);
         return (password.length() > 0 || password.equals(";")) && matcher.find();
-    }
-
-
-    /**
-     * Khởi tạo các thành phần cần thiết cho việc quản lý đăng nhập
-     */
-    private void initFirebase() {
-        //Khoi tao thanh phan de dang nhap, dang ky
-        mAuth = FirebaseAuth.getInstance();
-        mAuthListener = firebaseAuth -> {
-            user = firebaseAuth.getCurrentUser();
-            if (user != null) {
-                // User is signed in
-                StaticConfig.UID = user.getUid();
-                if (firstTimeAccess) {
-                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                    LoginActivity.this.finish();
-                }
-            }
-            firstTimeAccess = false;
-        };
-        waitingDialog = new LovelyProgressDialog(this).setCancelable(false);
     }
 
     private void loginUser(final String email, String password) {

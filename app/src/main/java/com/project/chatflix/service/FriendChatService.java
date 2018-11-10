@@ -69,7 +69,7 @@ public class FriendChatService extends Service {
                 if (!listKey.contains(friend.idRoom)) {
                     mapQuery.put(friend.idRoom, FirebaseDatabase.getInstance().getReference()
                             .child("Message/" + friend.idRoom)
-                            .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode())).limitToLast(1));
+                            .child(String.valueOf(StaticConfig.UID.hashCode())).limitToLast(1));
 
                     mapChildEventListenerMap.put(friend.idRoom, new ChildEventListener() {
                         @Override

@@ -20,6 +20,7 @@ import com.project.chatflix.fragment.ChatFragment;
 import com.project.chatflix.fragment.GroupFragment;
 import com.project.chatflix.fragment.InfoFragment;
 import com.project.chatflix.service.ServiceUtils;
+import com.project.chatflix.utils.StaticConfig;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,26 +43,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        tb = (Toolbar) findViewById(R.id.toolbarMain);
+        tb = findViewById(R.id.toolbarMain);
         setSupportActionBar(tb);
         getSupportActionBar().setTitle("");
-        layoutRequestFriend = (LinearLayout) findViewById(R.id.layout_request_friend);
-        viewPager = (ViewPager) findViewById(R.id.viewPagerMain);
+        layoutRequestFriend = findViewById(R.id.layout_request_friend);
+        viewPager = findViewById(R.id.viewPagerMain);
         sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(sectionsPagerAdapter);
 
-        tabLayout = (TabLayout) findViewById(R.id.tabMain);
+        tabLayout = findViewById(R.id.tabMain);
         tabLayout.setupWithViewPager(viewPager);
         tabLayout.animate();
         tabLayout.setSelectedTabIndicatorColor(getResources().getColor(R.color.off_white));
         tabLayout.setSelectedTabIndicatorHeight(3);
 
-        floatButton = (FloatingActionButton) findViewById(R.id.fab);
+        floatButton = findViewById(R.id.fab);
 
         setupViewPager(viewPager);
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() != null) {
-            mUserRef = FirebaseDatabase.getInstance().getReference().child("Users")
+            mUserRef = FirebaseDatabase.getInstance().getReference().child(getString(R.string.users))
                     .child(mAuth.getCurrentUser().getUid());
         }
     }
@@ -92,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
                     floatButton.setImageResource(R.drawable.ic_fr);
                 } else if (sectionsPagerAdapter.getItem(position) instanceof GroupFragment) {
                     floatButton.show();
-//                    floatButton.setOnClickListener(((GroupFragment) sectionsPagerAdapter.getItem(position)).onClickFloatButton.getInstance(MainActivity.this));
+                    floatButton.setOnClickListener(((GroupFragment) sectionsPagerAdapter.getItem(position)).onClickFloatButton.getInstance(MainActivity.this));
                     floatButton.setImageResource(R.drawable.ic_gr);
                 } else {
                     floatButton.hide();
@@ -117,7 +118,8 @@ public class MainActivity extends AppCompatActivity {
         if (currentUser == null) {
             sendToStart();
         } else {
-            mUserRef.child("online").setValue("true");
+            StaticConfig.UID = currentUser.getUid();
+            mUserRef.child(getString(R.string.online)).setValue(getString(R.string.true_field));
         }
         ServiceUtils.stopServiceFriendChat(getApplicationContext(), false);
 
@@ -148,28 +150,18 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-//    @Override
-//    protected void onDestroy() {
-//        if (getSinchServiceInterface() != null) {
-//            getSinchServiceInterface().stopClient();
-//        }
-//        super.onDestroy();
-//    }
-
     @Override
     public void onDestroy() {
+        super.onDestroy();
 //        if (getSinchServiceInterface() != null) {
 //            getSinchServiceInterface().stopClient();
 //            Toast.makeText(MainActivity.this,"Stop Service Sinch",Toast.LENGTH_SHORT).show();
 //        }
         if (mAuth.getCurrentUser() != null) {
-            FirebaseDatabase.getInstance().getReference().child("Users")
+            FirebaseDatabase.getInstance().getReference().child(getString(R.string.users))
                     .child(mAuth.getCurrentUser().getUid())
-                    .child("online").setValue(ServerValue.TIMESTAMP);
+                    .child(getString(R.string.online)).setValue(ServerValue.TIMESTAMP);
         }
-
-
-        super.onDestroy();
     }
 //    @Override
 //    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {

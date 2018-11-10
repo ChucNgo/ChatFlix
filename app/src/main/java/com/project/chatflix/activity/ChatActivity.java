@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -22,6 +23,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -32,6 +35,7 @@ import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.project.chatflix.R;
 import com.project.chatflix.adapter.ListMessageAdapter;
 import com.project.chatflix.database.SharedPreferenceHelper;
@@ -40,6 +44,7 @@ import com.project.chatflix.object.GetTimeAgo;
 import com.project.chatflix.object.Message;
 import com.project.chatflix.utils.StaticConfig;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,6 +78,7 @@ public class ChatActivity extends AppCompatActivity {
 
     // Storage Firebase
     private StorageReference mImageStorage;
+    private UploadTask uploadTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,15 +91,12 @@ public class ChatActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.arrow_left);
 
-//        getWindow().setBackgroundDrawableResource(R.drawable.bg_moutain_1);
-
         mImageStorage = FirebaseStorage.getInstance().getReference();
 
         Intent intentData = getIntent();
         idFriend = intentData.getCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID);
         kindOfChat = intentData.getStringExtra(getString(R.string.kind_of_chat));
         roomId = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
-        Log.e("Message", "Group roomId = " + roomId);
 
         final String nameFriend = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND);
 
@@ -108,20 +111,20 @@ public class ChatActivity extends AppCompatActivity {
                 editWriteMessage.setText("");
                 Message newMessage = new Message();
                 newMessage.text = content;
-                newMessage.idSender = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                newMessage.idSender = StaticConfig.UID;
                 newMessage.idReceiver = roomId;
                 newMessage.type = getString(R.string.text);
                 newMessage.timestamp = System.currentTimeMillis();
 
                 if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
-                    FirebaseDatabase.getInstance().getReference().child("Message/" + roomId)
-                            .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode()))
+                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
+                            .child(String.valueOf(StaticConfig.UID.hashCode()))
                             .push().setValue(newMessage);
-                    FirebaseDatabase.getInstance().getReference().child("Message")
-                            .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode())).child(roomId)
+                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table))
+                            .child(String.valueOf(StaticConfig.UID.hashCode())).child(roomId)
                             .push().setValue(newMessage);
                 } else {
-                    FirebaseDatabase.getInstance().getReference().child("Message/" + roomId)
+                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
                             .push().setValue(newMessage);
                 }
 
@@ -145,8 +148,8 @@ public class ChatActivity extends AppCompatActivity {
                     ListMessageAdapter(this, conversation, bitmapAvataFriend, bitmapAvataUser);
 
             if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
-                FirebaseDatabase.getInstance().getReference().child("Message/" + roomId)
-                        .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode()))
+                FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
+                        .child(String.valueOf(StaticConfig.UID.hashCode()))
                         .addChildEventListener(new ChildEventListener() {
                             @Override
                             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -189,7 +192,7 @@ public class ChatActivity extends AppCompatActivity {
                         });
                 recyclerChat.setAdapter(adapter);
             } else {
-                FirebaseDatabase.getInstance().getReference().child("Message/" + roomId)
+                FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
                         .addChildEventListener(new ChildEventListener() {
                             @Override
                             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -235,7 +238,6 @@ public class ChatActivity extends AppCompatActivity {
             }
         }
 
-        //setActionBar bằng một layout
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View action_bar_view = inflater.inflate(R.layout.chat_custom_bar, null);
 
@@ -391,52 +393,60 @@ public class ChatActivity extends AppCompatActivity {
                 Uri imageUri = data.getData();
                 if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
 
-                    current_user_ref = "Message/" + roomId + "/" +
-                            String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode());
+                    current_user_ref = getString(R.string.message_table) + "/" + roomId + "/" +
+                            String.valueOf(StaticConfig.UID.hashCode());
 
-                    chat_user_ref = "Message/" +
-                            String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode())
+                    chat_user_ref = getString(R.string.message_table) + "/" +
+                            String.valueOf(StaticConfig.UID.hashCode())
                             + "/" + roomId;
                 } else {
-                    current_user_ref = "Message/" + roomId;
-                    chat_user_ref = "Message/" + roomId;
+                    current_user_ref = getString(R.string.message_table) + "/" + roomId;
+                    chat_user_ref = getString(R.string.message_table) + "/" + roomId;
                 }
 
 
                 DatabaseReference user_message_push = FirebaseDatabase.getInstance().getReference()
-                        .child("Message")
-                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                        .child(getString(R.string.message_table))
+                        .child(StaticConfig.UID)
                         .child(roomId)
                         .push();
 
                 final String push_id = user_message_push.getKey();
 
 
+
                 StorageReference filepath = mImageStorage.child(getString(R.string.message_images)).child(push_id + ".jpg");
 
-                filepath.putFile(imageUri).addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        String download_url = task.getResult().getDownloadUrl().toString();
+                uploadTask = filepath.putFile(imageUri);
 
-                        Map messageMap = new HashMap();
-                        messageMap.put(getString(R.string.text), download_url);
-                        messageMap.put(getString(R.string.id_sender), FirebaseAuth.getInstance().getCurrentUser().getUid());
-                        messageMap.put(getString(R.string.id_receiver), roomId);
-                        messageMap.put(getString(R.string.type), getString(R.string.image_field));
-                        messageMap.put(getString(R.string.timestamp), ServerValue.TIMESTAMP);
+                uploadTask.addOnCompleteListener(task -> {
 
-                        Map messageUserMap = new HashMap();
-                        messageUserMap.put(current_user_ref + "/" + push_id, messageMap);
-                        messageUserMap.put(chat_user_ref + "/" + push_id, messageMap);
+                    try {
+                        if (task.isSuccessful()) {
+                            String download_url = task.getResult().getMetadata().getReference().getDownloadUrl().toString();
 
-                        editWriteMessage.setText("");
+                            Map messageMap = new HashMap();
+                            messageMap.put(getString(R.string.text), download_url);
+                            messageMap.put(getString(R.string.id_sender), StaticConfig.UID);
+                            messageMap.put(getString(R.string.id_receiver), roomId);
+                            messageMap.put(getString(R.string.type), getString(R.string.image_field));
+                            messageMap.put(getString(R.string.timestamp), ServerValue.TIMESTAMP);
 
-                        FirebaseDatabase.getInstance().getReference()
-                                .updateChildren(messageUserMap, (databaseError, databaseReference) -> {
-                                    if (databaseError != null) {
-                                        Log.d("CHAT_LOG", databaseError.getMessage().toString());
-                                    }
-                                });
+                            Map messageUserMap = new HashMap();
+                            messageUserMap.put(current_user_ref + "/" + push_id, messageMap);
+                            messageUserMap.put(chat_user_ref + "/" + push_id, messageMap);
+
+                            editWriteMessage.setText("");
+
+                            FirebaseDatabase.getInstance().getReference()
+                                    .updateChildren(messageUserMap, (databaseError, databaseReference) -> {
+                                        if (databaseError != null) {
+                                            Log.e(getClass().getSimpleName(), databaseError.getMessage());
+                                        }
+                                    });
+                        }
+                    } catch (Exception e) {
+                        Log.e(getClass().getSimpleName(), e.toString());
                     }
                 });
             }

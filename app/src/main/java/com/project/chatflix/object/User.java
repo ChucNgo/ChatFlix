@@ -7,6 +7,7 @@ public class User {
     public String avatar;
     public Status status;
     public Message message;
+    public String user_id;
 
 
 
@@ -67,5 +68,13 @@ public class User {
 
     public void setMessage(Message message) {
         this.message = message;
+    }
+
+    public String getUser_id() {
+        return user_id;
+    }
+
+    public void setUser_id(String user_id) {
+        this.user_id = user_id;
     }
 }

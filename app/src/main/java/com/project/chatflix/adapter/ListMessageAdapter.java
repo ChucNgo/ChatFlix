@@ -197,7 +197,7 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public int getItemViewType(int position) {
         return conversation.getListMessageData().get(position)
-                .idSender.equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) ?
+                .idSender.equals(StaticConfig.UID) ?
                 ChatActivity.VIEW_TYPE_USER_MESSAGE : ChatActivity.VIEW_TYPE_FRIEND_MESSAGE;
     }
 

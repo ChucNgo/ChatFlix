@@ -13,6 +13,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,18 +42,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class InfoFragment extends Fragment {
 
     TextView tvUserName;
     ImageView circleAvatar;
-    String name, email;
 
     private DatabaseReference userDB;
-    private FirebaseUser currenUser;
-    private FirebaseAuth mAuth;
 
     private List<Configuration> listConfig = new ArrayList<>();
     private RecyclerView recyclerView;
@@ -63,6 +58,7 @@ public class InfoFragment extends Fragment {
 
     private Context context;
     private User myAccount;
+    SharedPreferenceHelper prefHelper;
 
     public InfoFragment() {
         // Required empty public constructor
@@ -76,57 +72,22 @@ public class InfoFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        currenUser = FirebaseAuth.getInstance().getCurrentUser();
-
-        String current_uid = currenUser.getUid();
-
-        userDB = FirebaseDatabase.getInstance().getReference().child(getString(R.string.users)).child(current_uid);
-//        userDB.addListenerForSingleValueEvent(userListener);
-        mAuth = FirebaseAuth.getInstance();
-
-        userDB.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-//                name = dataSnapshot.child("name").getValue().toString();
-//                email = dataSnapshot.child("email").getValue().toString();
-//                final String image = dataSnapshot.child("image").getValue().toString();
-
-                //Lấy thông tin của user về và cập nhật lên giao diện
-                listConfig.clear();
-                myAccount = dataSnapshot.getValue(User.class);
-                setupArrayListInfo(myAccount);
-                if (infoAdapter != null) {
-                    infoAdapter.notifyDataSetChanged();
-                }
-
-                if (tvUserName != null) {
-                    tvUserName.setText(myAccount.name);
-                }
-
-//                setImageAvatar(context, image);
-                setImageAvatar(context, myAccount.avatar);
-                SharedPreferenceHelper preferenceHelper = SharedPreferenceHelper.getInstance(context);
-                preferenceHelper.saveUserInfo(myAccount);
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        /** */
 
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_info, container, false);
+        initView(view);
+        addEvent();
+
+        return view;
+    }
+
+    private void initView(View view) {
         context = view.getContext();
         circleAvatar = (ImageView) view.findViewById(R.id.circleAvatar);
         circleAvatar.setOnClickListener(onAvatarClick);
         tvUserName = (TextView) view.findViewById(R.id.tv_username);
 
-        SharedPreferenceHelper prefHelper = SharedPreferenceHelper.getInstance(context);
+        prefHelper = SharedPreferenceHelper.getInstance(context);
         myAccount = prefHelper.getUserInfo();
         setupArrayListInfo(myAccount);
         setImageAvatar(context, myAccount.avatar);
@@ -148,7 +109,36 @@ public class InfoFragment extends Fragment {
 
         waitingDialog = new LovelyProgressDialog(context);
 
-        return view;
+        userDB = FirebaseDatabase.getInstance().getReference().child(getString(R.string.users)).child(StaticConfig.UID);
+    }
+
+    private void addEvent() {
+        userDB.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                listConfig.clear();
+                myAccount = dataSnapshot.getValue(User.class);
+                setupArrayListInfo(myAccount);
+                if (infoAdapter != null) {
+                    infoAdapter.notifyDataSetChanged();
+                }
+
+                if (tvUserName != null) {
+                    tvUserName.setText(myAccount.name);
+                }
+
+                setImageAvatar(context, myAccount.avatar);
+                SharedPreferenceHelper preferenceHelper = SharedPreferenceHelper.getInstance(context);
+                preferenceHelper.saveUserInfo(myAccount);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     /**
@@ -250,9 +240,8 @@ public class InfoFragment extends Fragment {
     private void setImageAvatar(Context context, String imgBase64) {
         try {
             Resources res = getResources();
-            //Nếu chưa có avatar thì để hình mặc định
             Bitmap src;
-            if (imgBase64.equals("default")) {
+            if (imgBase64.equals(context.getString(R.string.default_field))) {
                 src = BitmapFactory.decodeResource(res, R.drawable.default_avatar);
             } else {
                 byte[] decodedString = Base64.decode(imgBase64, Base64.DEFAULT);
@@ -261,6 +250,7 @@ public class InfoFragment extends Fragment {
 
             circleAvatar.setImageDrawable(ImageUtils.roundedImage(context, src));
         } catch (Exception e) {
+            Log.e(getClass().getSimpleName(), e.toString());
         }
     }
 

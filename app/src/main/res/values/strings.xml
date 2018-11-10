@@ -108,4 +108,16 @@
     <string name="cannot_send_email_to">Cannot to sent email to </string>
     <string name="email_sent_to">Email sent to </string>
     <string name="failed_registration">Failed Registration: </string>
+    <string name="message_table">Message</string>
+    <string name="get_all_friend">Get all friend....</string>
+    <string name="add_friend">Add friend</string>
+    <string name="enter_friend_email">Enter friend email</string>
+    <string name="finding_friend">Finding friend....</string>
+    <string name="adding_friend">Add friend....</string>
+    <string name="add_friend_failed">An error occured during adding friend!</string>
+    <string name="add_friend_success">Add friend successfully</string>
+    <string name="friend_title">Friend</string>
+    <string name="request_table">Request</string>
+    <string name="send_request_friend_success">Send request to friend successfully!</string>
+    <string name="delete_request_successfully">Delete request successfully!</string>
 </resources>

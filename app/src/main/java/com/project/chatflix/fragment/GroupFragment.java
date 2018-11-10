@@ -29,6 +29,7 @@ import com.project.chatflix.activity.AddGroupActivity;
 import com.project.chatflix.adapter.ListGroupsAdapter;
 import com.project.chatflix.database.GroupDB;
 import com.project.chatflix.object.Group;
+import com.project.chatflix.utils.StaticConfig;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
 
@@ -96,7 +97,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     private void getListGroup() {
         FirebaseDatabase.getInstance().getReference().child(getActivity().getString(R.string.users) + "/" +
-                FirebaseAuth.getInstance().getCurrentUser().getUid()
+                StaticConfig.UID
                 + "/" + getActivity().getString(R.string.group_field))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -267,7 +268,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     public void leaveGroup(final Group group) {
         FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + group.id + "/" + getActivity().getString(R.string.member))
-                .orderByValue().equalTo(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .orderByValue().equalTo(StaticConfig.UID)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -290,7 +291,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                             }
 
                             FirebaseDatabase.getInstance().getReference().child(getActivity().getString(R.string.users))
-                                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                                    .child(StaticConfig.UID)
                                     .child(getString(R.string.group_table)).child(group.id).removeValue();
                             FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + group.id)
                                     .child(getActivity().getString(R.string.member))

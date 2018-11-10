@@ -159,8 +159,8 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             ((ItemFriendViewHolder) holder).txtTime.setVisibility(View.GONE);
             if (mapQuery.get(id) == null && mapChildListener.get(id) == null) {
                 mapQuery.put(id, FirebaseDatabase.getInstance().getReference()
-                        .child("Message/" + idRoom)
-                        .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode()))
+                        .child(context.getString(R.string.message_table) + "/" + idRoom)
+                        .child(String.valueOf(StaticConfig.UID.hashCode()))
                         .limitToLast(1));
                 try {
                     mapChildListener.put(id, new ChildEventListener() {
@@ -228,7 +228,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
 
         if (mapQueryOnline.get(id) == null && mapChildListenerOnline.get(id) == null) {
-            mapQueryOnline.put(id, FirebaseDatabase.getInstance().getReference().child("Users/" + id + "/status"));
+            mapQueryOnline.put(id, FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users) + "/" + id + "/status"));
             mapChildListenerOnline.put(id, new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -308,77 +308,75 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users)).child(currentUser.getUid())
                     .child(context.getString(R.string.friend_field)).orderByValue().equalTo(idFriend)
                     .addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.getValue() == null) {
-                        dialogWaitDeleting.dismiss();
-                        new LovelyInfoDialog(context)
-                                .setTopColorRes(R.color.colorAccent)
-                                .setTitle(context.getString(R.string.error))
-                                .setMessage(context.getString(R.string.error_delete_friend))
-                                .show();
-                    } else {
-                        String idRemoval = ((HashMap) dataSnapshot.getValue()).keySet().iterator()
-                                .next().toString();
-                        FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
-                                .child(currentUser.getUid()).child(context.getString(R.string.friend_field))
-                                .child(idRemoval).removeValue()
-                                .addOnCompleteListener(task -> {
-                                    dialogWaitDeleting.dismiss();
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.getValue() == null) {
+                                dialogWaitDeleting.dismiss();
+                                new LovelyInfoDialog(context)
+                                        .setTopColorRes(R.color.colorAccent)
+                                        .setTitle(context.getString(R.string.error))
+                                        .setMessage(context.getString(R.string.error_delete_friend))
+                                        .show();
+                            } else {
+                                String idRemoval = ((HashMap) dataSnapshot.getValue()).keySet().iterator()
+                                        .next().toString();
+                                FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
+                                        .child(currentUser.getUid()).child(context.getString(R.string.friend_field))
+                                        .child(idRemoval).removeValue()
+                                        .addOnCompleteListener(task -> {
+                                            dialogWaitDeleting.dismiss();
 
-                                    new LovelyInfoDialog(context)
-                                            .setTopColorRes(R.color.colorAccent)
-                                            .setTitle(context.getString(R.string.success))
-                                            .setMessage(context.getString(R.string.delete_friend_successfully))
-                                            .show();
+                                            new LovelyInfoDialog(context)
+                                                    .setTopColorRes(R.color.colorAccent)
+                                                    .setTitle(context.getString(R.string.success))
+                                                    .setMessage(context.getString(R.string.delete_friend_successfully))
+                                                    .show();
 
-                                    Intent intentDeleted = new Intent(ChatFragment.ACTION_DELETE_FRIEND);
-                                    intentDeleted.putExtra(context.getString(R.string.id_friend), idFriend);
-                                    context.sendBroadcast(intentDeleted);
-                                })
-                                .addOnFailureListener(e -> {
-                                    dialogWaitDeleting.dismiss();
-                                    new LovelyInfoDialog(context)
-                                            .setTopColorRes(R.color.colorAccent)
-                                            .setTitle(context.getString(R.string.error))
-                                            .setMessage(context.getString(R.string.error_delete_friend))
-                                            .show();
-                                });
-                        FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
-                                .child(idFriend).child(context.getString(R.string.friend_field)).orderByValue().equalTo(currentUser.getUid())
-                                .addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        String idRemoval = ((HashMap) dataSnapshot.getValue()).keySet().iterator().next().toString();
-                                        FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
-                                                .child(idFriend).child(context.getString(R.string.friend_field))
-                                                .child(idRemoval).removeValue();
-                                    }
+                                            Intent intentDeleted = new Intent(ChatFragment.ACTION_DELETE_FRIEND);
+                                            intentDeleted.putExtra(context.getString(R.string.id_friend), idFriend);
+                                            context.sendBroadcast(intentDeleted);
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            dialogWaitDeleting.dismiss();
+                                            new LovelyInfoDialog(context)
+                                                    .setTopColorRes(R.color.colorAccent)
+                                                    .setTitle(context.getString(R.string.error))
+                                                    .setMessage(context.getString(R.string.error_delete_friend))
+                                                    .show();
+                                        });
+                                FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
+                                        .child(idFriend).child(context.getString(R.string.friend_field)).orderByValue().equalTo(currentUser.getUid())
+                                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                                            @Override
+                                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                                String idRemoval = ((HashMap) dataSnapshot.getValue()).keySet().iterator().next().toString();
+                                                FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
+                                                        .child(idFriend).child(context.getString(R.string.friend_field))
+                                                        .child(idRemoval).removeValue();
+                                            }
 
-                                    @Override
-                                    public void onCancelled(DatabaseError databaseError) {
+                                            @Override
+                                            public void onCancelled(DatabaseError databaseError) {
 
-                                    }
-                                });
+                                            }
+                                        });
 
-                        FirebaseDatabase.getInstance().getReference().child("Message")
-                                .child(String.valueOf(idFriend.hashCode()))
-                                .child("")
-                                .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode()))
-                                .removeValue();
+                                FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.message_table))
+                                        .child(String.valueOf(idFriend.hashCode()))
+                                        .child(String.valueOf(StaticConfig.UID.hashCode()))
+                                        .removeValue();
 
-                        FirebaseDatabase.getInstance().getReference().child("Message")
-                                .child(String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode()))
-                                .child("")
-                                .child(String.valueOf(idFriend.hashCode())).removeValue();
-                    }
-                }
+                                FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.message_table))
+                                        .child(String.valueOf(StaticConfig.UID.hashCode()))
+                                        .child(String.valueOf(idFriend.hashCode())).removeValue();
+                            }
+                        }
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                }
-            });
+                        }
+                    });
         } else {
             dialogWaitDeleting.dismiss();
             new LovelyInfoDialog(context)
