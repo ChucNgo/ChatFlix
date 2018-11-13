@@ -7,7 +7,7 @@
     <color name="colorPrimaryLight">#CFD8DC</color>
     <color name="chat_item_text">@color/colorPrimaryDark</color>
     <color name="chat_bg">#eceff1</color>
-    <color name="colorAccent">#ff5521</color>
+    <color name="colorAccent">#F13675</color>
     <color name="colorIndivateTab">#FFFFFF</color>
     <color name="transparent">#00000000</color>
     <color name="colorCardView">#f7f7f7</color>
@@ -23,4 +23,5 @@
     <color name="greyish">#fff2f1f2</color>
 
     <color name="tab_color">#455A64</color>
+    <color name="orange">#ff5521</color>
 </resources>

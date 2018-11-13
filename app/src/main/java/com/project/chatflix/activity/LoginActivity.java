@@ -19,6 +19,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.project.chatflix.MainActivity;
 import com.project.chatflix.R;
+import com.project.chatflix.database.SharedPreferenceHelper;
 import com.project.chatflix.utils.StaticConfig;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
 import com.yarolegovich.lovelydialog.LovelyTextInputDialog;
@@ -29,9 +30,6 @@ import java.util.regex.Pattern;
 public class LoginActivity extends Activity
 //        implements SinchService.StartFailedListener
 {
-
-    private static final String EMAIL = "email";
-    private static final String PASSWORD = "password";
 
     public static final String MY_PREFERENCES = "MyPrefs";
 
@@ -47,7 +45,8 @@ public class LoginActivity extends Activity
     private FirebaseUser user;
     private boolean firstTimeAccess;
     private LinearLayout layoutRememberLogin;
-    SharedPreferences sharedpreferences;
+    private SharedPreferences sharedpreferences;
+    private SharedPreferenceHelper preferenceHelper;
 
     private LovelyProgressDialog waitingDialog;
     private ImageView imgRemember;
@@ -81,13 +80,19 @@ public class LoginActivity extends Activity
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = firebaseAuth -> {
             user = firebaseAuth.getCurrentUser();
-            if (user != null) {
-                StaticConfig.UID = user.getUid();
-                if (firstTimeAccess) {
-                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                    LoginActivity.this.finish();
+            if (preferenceHelper.getAutoLogin()) {
+                if (user != null) {
+                    StaticConfig.UID = user.getUid();
+                    if (firstTimeAccess) {
+
+                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                        LoginActivity.this.finish();
+                    }
                 }
+            } else {
+
             }
+
             firstTimeAccess = false;
         };
     }
@@ -96,6 +101,7 @@ public class LoginActivity extends Activity
         getWindow().setBackgroundDrawableResource(R.drawable.background);
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         mAuth = FirebaseAuth.getInstance();
+        preferenceHelper = SharedPreferenceHelper.getInstance(this);
         progressDialog = new ProgressDialog(this);
         waitingDialog = new LovelyProgressDialog(this);
         txtEmailLogin = findViewById(R.id.txtEmailLogin);
@@ -104,6 +110,15 @@ public class LoginActivity extends Activity
         btnReg = findViewById(R.id.btnReg);
         layoutRememberLogin = findViewById(R.id.layout_remember_login);
         imgRemember = findViewById(R.id.radioButton);
+
+        if (preferenceHelper.getAutoLogin()) {
+            imgRemember.setTag(1);
+            imgRemember.setBackgroundResource(R.drawable.rb_checked);
+        } else {
+            imgRemember.setTag(0);
+            imgRemember.setBackgroundResource(R.drawable.rb_unchecked);
+        }
+
         btnForgotPassword = findViewById(R.id.btnForgotPassword);
 
         waitingDialog = new LovelyProgressDialog(this).setCancelable(false);
@@ -132,9 +147,12 @@ public class LoginActivity extends Activity
                     if (imgRemember.getTag().toString().equalsIgnoreCase("1")) {
                         SharedPreferences.Editor editor = sharedpreferences.edit();
 
-                        editor.putString(EMAIL, email);
-                        editor.putString(PASSWORD, password);
+                        editor.putString(getString(R.string.email), email);
+                        editor.putString(getString(R.string.password_field), password);
                         editor.apply();
+                        preferenceHelper.setAuToLogin(true);
+                    } else {
+                        preferenceHelper.setAuToLogin(false);
                     }
 //                        if (!getSinchServiceInterface().isStarted()) {
 //                            getSinchServiceInterface().startClient(email);
@@ -218,11 +236,11 @@ public class LoginActivity extends Activity
     private void loadAccount() {
         sharedpreferences = getSharedPreferences(MY_PREFERENCES,
                 Context.MODE_PRIVATE);
-        if (sharedpreferences.contains(EMAIL)) {
-            txtEmailLogin.setText(sharedpreferences.getString(EMAIL, ""));
+        if (sharedpreferences.contains(getString(R.string.email))) {
+            txtEmailLogin.setText(sharedpreferences.getString(getString(R.string.email), ""));
         }
-        if (sharedpreferences.contains(PASSWORD)) {
-            txtPasswordLogin.setText(sharedpreferences.getString(PASSWORD, ""));
+        if (sharedpreferences.contains(getString(R.string.password_field))) {
+            txtPasswordLogin.setText(sharedpreferences.getString(getString(R.string.password_field), ""));
         }
     }
 
@@ -235,7 +253,6 @@ public class LoginActivity extends Activity
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 progressDialog.dismiss();
-                // Khởi động service Sinch
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);

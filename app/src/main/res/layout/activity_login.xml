@@ -163,7 +163,7 @@
             android:layout_width="60dp"
             android:layout_height="30dp"
             android:background="@android:color/transparent"
-            android:textColor="@color/colorAccent"
+            android:textColor="@color/orange"
             android:textSize="14dp"
             android:text="@string/sign_up"/>
 

@@ -120,4 +120,5 @@
     <string name="request_table">Request</string>
     <string name="send_request_friend_success">Send request to friend successfully!</string>
     <string name="delete_request_successfully">Delete request successfully!</string>
+    <string name="app_name_content">Chat Flix</string>
 </resources>

@@ -83,9 +83,9 @@ public class InfoFragment extends Fragment {
 
     private void initView(View view) {
         context = view.getContext();
-        circleAvatar = (ImageView) view.findViewById(R.id.circleAvatar);
+        circleAvatar = view.findViewById(R.id.circleAvatar);
         circleAvatar.setOnClickListener(onAvatarClick);
-        tvUserName = (TextView) view.findViewById(R.id.tv_username);
+        tvUserName = view.findViewById(R.id.tv_username);
 
         prefHelper = SharedPreferenceHelper.getInstance(context);
         myAccount = prefHelper.getUserInfo();
@@ -93,7 +93,7 @@ public class InfoFragment extends Fragment {
         setImageAvatar(context, myAccount.avatar);
         tvUserName.setText(myAccount.name);
 
-        recyclerView = (RecyclerView) view.findViewById(R.id.info_recycler_view);
+        recyclerView = view.findViewById(R.id.info_recycler_view);
         infoAdapter = new UserInfoAdapter(getActivity(), listConfig, myAccount, (newName -> {
             userDB.child(getString(R.string.name_field)).setValue(newName);
             myAccount.name = newName;
@@ -141,14 +141,11 @@ public class InfoFragment extends Fragment {
         });
     }
 
-    /**
-     * Khi click vào avatar thì bắn intent mở trình xem ảnh mặc định để chọn ảnh
-     */
     private View.OnClickListener onAvatarClick = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
 
-            new AlertDialog.Builder(context)
+            new AlertDialog.Builder(context, R.style.AlertDialogTheme)
                     .setTitle(getString(R.string.avatar))
                     .setMessage(getString(R.string.sure_want_to_change_avatar))
                     .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {

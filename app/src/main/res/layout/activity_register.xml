@@ -3,19 +3,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/off_white">
+    android:background="@drawable/new_background">
 
-    <!--<android.support.v7.widget.Toolbar-->
-        <!--android:id="@+id/toolbar"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="46dp"-->
-        <!--app:contentInsetLeft="0dp"-->
-        <!--app:contentInsetStart="0dp"-->
-        <!--app:title="Create Account"-->
-        <!--app:titleTextColor="#fff"-->
-        <!--android:background="@color/colorPrimary">-->
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        app:contentInsetLeft="0dp"
+        app:contentInsetStart="0dp"
+        app:title="Create Account"
+        app:titleTextColor="#fff"
+        android:background="@color/colorPrimary">
 
-    <!--</android.support.v7.widget.Toolbar>-->
+    </android.support.v7.widget.Toolbar>
 
     <LinearLayout
         android:layout_width="match_parent"

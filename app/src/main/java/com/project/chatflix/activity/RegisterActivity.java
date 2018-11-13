@@ -2,11 +2,13 @@ package com.project.chatflix.activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -31,7 +33,7 @@ public class RegisterActivity extends AppCompatActivity {
     private DatabaseReference database;
     private ProgressDialog progressDialog;
     private Toolbar tb;
-
+    SharedPreferences sharedpreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +44,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        getWindow().setBackgroundDrawableResource(R.drawable.new_background);
+//        getWindow().setBackgroundDrawableResource(R.drawable.new_background);
         auth = FirebaseAuth.getInstance();
 
         txtName = findViewById(R.id.txtName);
@@ -88,14 +90,10 @@ public class RegisterActivity extends AppCompatActivity {
 
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-
                 FirebaseUser current_user = FirebaseAuth.getInstance().getCurrentUser();
                 String uid = current_user.getUid();
-
-                // Lấy từ User, lấy uid
                 database = FirebaseDatabase.getInstance().getReference().child(getString(R.string.users)).child(uid);
 
-                // Lưu vào database name,status với id mặc định
                 HashMap<String, String> userMap = new HashMap<>();
                 userMap.put(getString(R.string.name_field), name);
                 userMap.put(getString(R.string.avatar_field), getString(R.string.default_field));
@@ -105,6 +103,12 @@ public class RegisterActivity extends AppCompatActivity {
                 database.setValue(userMap).addOnCompleteListener(task1 -> {
                     if (task1.isSuccessful()) {
                         progressDialog.dismiss();
+
+                        SharedPreferences.Editor editor = sharedpreferences.edit();
+
+                        editor.putString(getString(R.string.email), email);
+                        editor.putString(getString(R.string.password_field), password);
+                        editor.apply();
 
                         Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -121,7 +125,16 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(RegisterActivity.this, getString(R.string.failed_registration) + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-
-
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 }

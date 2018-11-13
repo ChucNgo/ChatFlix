@@ -15,9 +15,11 @@ public class SharedPreferenceHelper {
     private static String SHARE_KEY_EMAIL = "email";
     private static String SHARE_KEY_AVATA = "avata";
     private static String SHARE_KEY_UID = "uid";
+    private static String IS_AUTO_LOGIN = "autoLogin";
 
 
-    private SharedPreferenceHelper() {}
+    private SharedPreferenceHelper() {
+    }
 
     public static SharedPreferenceHelper getInstance(Context context) {
         if (instance == null) {
@@ -36,7 +38,7 @@ public class SharedPreferenceHelper {
         editor.apply();
     }
 
-    public User getUserInfo(){
+    public User getUserInfo() {
         String userName = preferences.getString(SHARE_KEY_NAME, "");
         String email = preferences.getString(SHARE_KEY_EMAIL, "");
         String avatar = preferences.getString(SHARE_KEY_AVATA, "default");
@@ -49,8 +51,18 @@ public class SharedPreferenceHelper {
         return user;
     }
 
-    public String getUID(){
+    public String getUID() {
         return preferences.getString(SHARE_KEY_UID, "");
+    }
+
+    public boolean getAutoLogin() {
+        boolean result = preferences.getBoolean(IS_AUTO_LOGIN, false);
+        return result;
+    }
+
+    public void setAuToLogin(boolean kq){
+        editor.putBoolean(IS_AUTO_LOGIN, kq);
+        editor.apply();
     }
 
 }

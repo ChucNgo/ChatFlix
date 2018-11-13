@@ -167,21 +167,22 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         @Override
                         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                             HashMap mapMessage = (HashMap) dataSnapshot.getValue();
+                            int position1 = holder.getAdapterPosition();
                             if (mapMark.get(id) != null) {
                                 if (!mapMark.get(id)) {
                                     listFriend.getListFriend()
-                                            .get(position).message.text = id + mapMessage.get(context.getString(R.string.text));
+                                            .get(position1).message.text = id + mapMessage.get(context.getString(R.string.text));
                                 } else {
                                     listFriend.getListFriend()
-                                            .get(position).message.text = (String) mapMessage.get(context.getString(R.string.text));
+                                            .get(position1).message.text = (String) mapMessage.get(context.getString(R.string.text));
                                 }
                                 notifyDataSetChanged();
                                 mapMark.put(id, false);
                             } else {
-                                listFriend.getListFriend().get(position).message.text = (String) mapMessage.get(context.getString(R.string.text));
+                                listFriend.getListFriend().get(position1).message.text = (String) mapMessage.get(context.getString(R.string.text));
                                 notifyDataSetChanged();
                             }
-                            listFriend.getListFriend().get(position).message.timestamp = (long) mapMessage.get(context.getString(R.string.timestamp));
+                            listFriend.getListFriend().get(position1).message.timestamp = (long) mapMessage.get(context.getString(R.string.timestamp));
                         }
 
                         @Override
