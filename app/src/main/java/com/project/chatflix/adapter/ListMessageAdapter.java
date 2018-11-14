@@ -59,13 +59,10 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof ItemMessageFriendHolder) {
-            // Hiển thị ảnh người khác gửi
             Message mess = conversation.getListMessageData().get(position);
 
-            String mess_type = mess.type;
-
-            // Friend gửi ảnh
             if (mess != null) {
+                String mess_type = mess.type;
                 if (mess_type.equals(context.getString(R.string.image_field))) {
                     ((ItemMessageFriendHolder) holder).viewCallFriend.setVisibility(View.GONE);
                     ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.INVISIBLE);
@@ -89,26 +86,21 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 //                    String imageBase64 = ImageUtils.encodeBase64(liteImage);
 
                 } else if (mess_type.equals(context.getString(R.string.call_field))) {
-
                     ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.GONE);
                     ((ItemMessageFriendHolder) holder).imgFriend.setVisibility(View.GONE);
                     ((ItemMessageFriendHolder) holder).viewCallFriend.setVisibility(View.VISIBLE);
                     ((ItemMessageFriendHolder) holder).txtDurationFriend
                             .setText(conversation.getListMessageData().get(position).durationCall);
-
-
                 } else {
 //                    ((ItemMessageFriendHolder) holder).imgFriend.setVisibility(View.INVISIBLE);
                     ((ItemMessageFriendHolder) holder).viewCallFriend.setVisibility(View.GONE);
                     ((ItemMessageFriendHolder) holder).imgFriend.setVisibility(View.GONE);
                     ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.VISIBLE);
-                    // Hiển thị message lên TextView
                     ((ItemMessageFriendHolder) holder).txtContent
                             .setText(conversation.getListMessageData().get(position).text);
                 }
             }
 
-            // Hiển thị avatar cạnh TextView
             Bitmap currentAvata = bitmapAvata.
                     get(conversation.getListMessageData().get(position).idSender);
             if (currentAvata != null) {
@@ -123,7 +115,6 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             if (dataSnapshot.getValue() != null) {
                                 String avataStr = (String) dataSnapshot.getValue();
-                                // Check String avatar bằng "" hay value
                                 if (!avataStr.equals(StaticConfig.STR_DEFAULT_BASE64)) {
                                     byte[] decodedString = Base64.decode(avataStr, Base64.DEFAULT);
                                     ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
@@ -143,14 +134,9 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }
         } else if (holder instanceof ItemMessageUserHolder) {
 
-
             Message mess = conversation.getListMessageData().get(position);
-
-            String mess_type = mess.type;
-
-
-            // User gửi ảnh
             if (mess != null) {
+                String mess_type = mess.type;
                 if (mess_type.equals(context.getString(R.string.image_field))) {
                     ((ItemMessageUserHolder) holder).viewCallUser.setVisibility(View.GONE);
                     ((ItemMessageUserHolder) holder).txtContent.setVisibility(View.INVISIBLE);
@@ -161,16 +147,12 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                             .centerInside()
                             .into(((ItemMessageUserHolder) holder).imgUser);
 
-
                 } else if (mess_type.equals(context.getString(R.string.call_field))) {
-
                     ((ItemMessageUserHolder) holder).txtContent.setVisibility(View.GONE);
                     ((ItemMessageUserHolder) holder).imgUser.setVisibility(View.GONE);
                     ((ItemMessageUserHolder) holder).viewCallUser.setVisibility(View.VISIBLE);
                     ((ItemMessageUserHolder) holder).txtDurationUser
                             .setText(conversation.getListMessageData().get(position).durationCall);
-
-
                 } else {
                     ((ItemMessageUserHolder) holder).viewCallUser.setVisibility(View.GONE);
                     ((ItemMessageUserHolder) holder).imgUser.setVisibility(View.GONE);
@@ -182,16 +164,13 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 //                            .placeholder(R.drawable.loading).resize(1,1)
 //                            .centerInside()
 //                            .into(((ItemMessageUserHolder) holder).imgUser);
-
                 }
             }
-
 
             if (bitmapAvataUser != null) {
                 ((ItemMessageUserHolder) holder).avata.setImageBitmap(bitmapAvataUser);
             }
         }
-
     }
 
     @Override
@@ -214,10 +193,10 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         public ItemMessageUserHolder(View itemView) {
             super(itemView);
-            txtContent = (TextView) itemView.findViewById(R.id.textContentUser);
-            avata = (CircleImageView) itemView.findViewById(R.id.imageView2);
-            imgUser = (ImageView) itemView.findViewById(R.id.message_image_layout_user);
-            txtDurationUser = (TextView) itemView.findViewById(R.id.txtDurationUser);
+            txtContent = itemView.findViewById(R.id.textContentUser);
+            avata = itemView.findViewById(R.id.imageView2);
+            imgUser = itemView.findViewById(R.id.message_image_layout_user);
+            txtDurationUser = itemView.findViewById(R.id.txtDurationUser);
             viewCallUser = itemView.findViewById(R.id.viewCallUser);
         }
     }
@@ -230,10 +209,10 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         public ItemMessageFriendHolder(View itemView) {
             super(itemView);
-            txtContent = (TextView) itemView.findViewById(R.id.textContentFriend);
-            avata = (CircleImageView) itemView.findViewById(R.id.imageView3);
-            imgFriend = (ImageView) itemView.findViewById(R.id.message_image_layout_friend);
-            txtDurationFriend = (TextView) itemView.findViewById(R.id.txtDurationFriend);
+            txtContent = itemView.findViewById(R.id.textContentFriend);
+            avata = itemView.findViewById(R.id.imageView3);
+            imgFriend = itemView.findViewById(R.id.message_image_layout_friend);
+            txtDurationFriend = itemView.findViewById(R.id.txtDurationFriend);
             viewCallFriend = itemView.findViewById(R.id.viewCallFriend);
         }
     }

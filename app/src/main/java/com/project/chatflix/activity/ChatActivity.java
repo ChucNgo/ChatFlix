@@ -79,57 +79,53 @@ public class ChatActivity extends AppCompatActivity {
     // Storage Firebase
     private StorageReference mImageStorage;
     private UploadTask uploadTask;
+    private DatabaseReference mDatabaseRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        tbChat = (Toolbar) findViewById(R.id.toolbarChat);
+        initView();
+        addEvents();
+
+    }
+
+    private void initView() {
+        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
+        tbChat = findViewById(R.id.toolbarChat);
         setSupportActionBar(tbChat);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.arrow_left);
-
         mImageStorage = FirebaseStorage.getInstance().getReference();
-
         Intent intentData = getIntent();
         idFriend = intentData.getCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID);
         kindOfChat = intentData.getStringExtra(getString(R.string.kind_of_chat));
         roomId = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
-
         final String nameFriend = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND);
-
         conversation = new Conversation();
+        btnSend = findViewById(R.id.btnSend);
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View action_bar_view = inflater.inflate(R.layout.chat_custom_bar, null);
 
-        btnSend = (ImageButton) findViewById(R.id.btnSend);
-        btnSend.setOnClickListener(v -> {
+        getSupportActionBar().setCustomView(action_bar_view);
 
-            String content = editWriteMessage.getText().toString().trim();
+        mTitleView = findViewById(R.id.custom_bar_title);
+        mLastSeenView = findViewById(R.id.custom_bar_seen);
+        mProfileImage = findViewById(R.id.custom_bar_image);
+        btnCall = findViewById(R.id.btnCall);
+        btnVideo = findViewById(R.id.btnVideo);
+        // Send Image
+        btnAddImage = findViewById(R.id.btnAddImage);
 
-            if (content.length() > 0) {
-                editWriteMessage.setText("");
-                Message newMessage = new Message();
-                newMessage.text = content;
-                newMessage.idSender = StaticConfig.UID;
-                newMessage.idReceiver = roomId;
-                newMessage.type = getString(R.string.text);
-                newMessage.timestamp = System.currentTimeMillis();
-
-                if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
-                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
-                            .child(String.valueOf(StaticConfig.UID.hashCode()))
-                            .push().setValue(newMessage);
-                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table))
-                            .child(String.valueOf(StaticConfig.UID.hashCode())).child(roomId)
-                            .push().setValue(newMessage);
-                } else {
-                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
-                            .push().setValue(newMessage);
-                }
-
-            }
-        });
+        editWriteMessage = findViewById(R.id.editWriteMessage);
+        linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        recyclerChat = findViewById(R.id.recyclerChat);
+        recyclerChat.setLayoutManager(linearLayoutManager);
+        adapter = new
+                ListMessageAdapter(this, conversation, bitmapAvataFriend, bitmapAvataUser);
+        recyclerChat.setAdapter(adapter);
 
         String base64AvataUser = SharedPreferenceHelper.getInstance(this).getUserInfo().avatar;
         if (!base64AvataUser.equals(StaticConfig.STR_DEFAULT_BASE64)) {
@@ -139,16 +135,9 @@ public class ChatActivity extends AppCompatActivity {
             bitmapAvataUser = null;
         }
 
-        editWriteMessage = (EditText) findViewById(R.id.editWriteMessage);
         if (idFriend != null && nameFriend != null) {
-            linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-            recyclerChat = (RecyclerView) findViewById(R.id.recyclerChat);
-            recyclerChat.setLayoutManager(linearLayoutManager);
-            adapter = new
-                    ListMessageAdapter(this, conversation, bitmapAvataFriend, bitmapAvataUser);
-
             if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
-                FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
+                mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
                         .child(String.valueOf(StaticConfig.UID.hashCode()))
                         .addChildEventListener(new ChildEventListener() {
                             @Override
@@ -190,9 +179,9 @@ public class ChatActivity extends AppCompatActivity {
 
                             }
                         });
-                recyclerChat.setAdapter(adapter);
+
             } else {
-                FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
+                mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
                         .addChildEventListener(new ChildEventListener() {
                             @Override
                             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -204,7 +193,6 @@ public class ChatActivity extends AppCompatActivity {
                                     newMessage.text = (String) mapMessage.get(getString(R.string.text));
                                     newMessage.timestamp = (long) mapMessage.get(getString(R.string.timestamp));
                                     newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
-                                    // Lấy ảnh
                                     newMessage.type = (String) mapMessage.get(getString(R.string.type));
 
                                     conversation.getListMessageData().add(newMessage);
@@ -233,24 +221,10 @@ public class ChatActivity extends AppCompatActivity {
 
                             }
                         });
-                recyclerChat.setAdapter(adapter);
-
             }
         }
 
-        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View action_bar_view = inflater.inflate(R.layout.chat_custom_bar, null);
-
-        getSupportActionBar().setCustomView(action_bar_view);
-
-        // ---- Custom Action bar Items ----
-        mTitleView = (TextView) findViewById(R.id.custom_bar_title);
-        mLastSeenView = (TextView) findViewById(R.id.custom_bar_seen);
-        mProfileImage = (CircleImageView) findViewById(R.id.custom_bar_image);
-        btnCall = (Button) findViewById(R.id.btnCall);
-        btnVideo = (Button) findViewById(R.id.btnVideo);
-
-        FirebaseDatabase.getInstance().getReference().child(getString(R.string.users))
+        mDatabaseRef.child(getString(R.string.users))
                 .child(String.valueOf(idFriend.get(0)))
                 .addValueEventListener(new ValueEventListener() {
                     @Override
@@ -258,20 +232,14 @@ public class ChatActivity extends AppCompatActivity {
                         email_friend = dataSnapshot.child(getString(R.string.email)).getValue().toString();
                         online = dataSnapshot.child(getString(R.string.online)).getValue().toString();
                         if (online.equals(getString(R.string.true_field))) {
-
                             mLastSeenView.setText(getString(R.string.online_status));
-
                         } else {
                             GetTimeAgo getTimeAgo = new GetTimeAgo();
                             long lastTime = Long.parseLong(online);
                             String lastSeenTime = getTimeAgo.getTimeAgo(lastTime, getApplicationContext());
-
                             mLastSeenView.setText(lastSeenTime);
-
                         }
-
                         mTitleView.setText(nameFriend);
-
                     }
 
                     @Override
@@ -279,9 +247,37 @@ public class ChatActivity extends AppCompatActivity {
 
                     }
                 });
+    }
 
-        // Send Image
-        btnAddImage = (Button) findViewById(R.id.btnAddImage);
+    private void addEvents() {
+        btnSend.setOnClickListener(v -> {
+
+            String content = editWriteMessage.getText().toString().trim();
+
+            if (content.length() > 0) {
+                editWriteMessage.setText("");
+                Message newMessage = new Message();
+                newMessage.text = content;
+                newMessage.idSender = StaticConfig.UID;
+                newMessage.idReceiver = roomId;
+                newMessage.type = getString(R.string.text);
+                newMessage.timestamp = System.currentTimeMillis();
+
+                if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
+                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
+                            .child(String.valueOf(StaticConfig.UID.hashCode()))
+                            .push().setValue(newMessage);
+                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table))
+                            .child(String.valueOf(StaticConfig.UID.hashCode())).child(roomId)
+                            .push().setValue(newMessage);
+                } else {
+                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
+                            .push().setValue(newMessage);
+                }
+
+            }
+        });
+
         btnAddImage.setOnClickListener(v -> {
             Intent galleryIntent = new Intent();
             galleryIntent.setType("image/*");
@@ -386,10 +382,8 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         try {
             if (requestCode == GALLERY_PICK && resultCode == RESULT_OK) {
-
                 Uri imageUri = data.getData();
                 if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
 
@@ -405,14 +399,13 @@ public class ChatActivity extends AppCompatActivity {
                 }
 
 
-                DatabaseReference user_message_push = FirebaseDatabase.getInstance().getReference()
+                DatabaseReference user_message_push = mDatabaseRef
                         .child(getString(R.string.message_table))
                         .child(StaticConfig.UID)
                         .child(roomId)
                         .push();
 
                 final String push_id = user_message_push.getKey();
-
 
 
                 StorageReference filepath = mImageStorage.child(getString(R.string.message_images)).child(push_id + ".jpg");
@@ -423,7 +416,7 @@ public class ChatActivity extends AppCompatActivity {
 
                     try {
                         if (task.isSuccessful()) {
-                            String download_url = task.getResult().getMetadata().getReference().getDownloadUrl().toString();
+                            String download_url = String.valueOf(task.getResult().getDownloadUrl());
 
                             Map messageMap = new HashMap();
                             messageMap.put(getString(R.string.text), download_url);
@@ -448,6 +441,9 @@ public class ChatActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         Log.e(getClass().getSimpleName(), e.toString());
                     }
+                })
+                .addOnFailureListener(e -> {
+                    String s = "";
                 });
             }
         } catch (Exception e) {
