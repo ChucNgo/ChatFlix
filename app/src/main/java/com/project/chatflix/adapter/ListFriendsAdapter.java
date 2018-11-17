@@ -51,6 +51,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public static Map<String, Boolean> mapMark;
     private ChatFragment fragment;
     LovelyProgressDialog dialogWaitDeleting;
+    private DatabaseReference mDatabaseRef;
 
     public ListFriendsAdapter(Context context, ListFriend listFriend, ChatFragment fragment) {
         this.listFriend = listFriend;
@@ -62,6 +63,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         mapQueryOnline = new HashMap<>();
         this.fragment = fragment;
         dialogWaitDeleting = new LovelyProgressDialog(context);
+        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
     }
 
     @Override
@@ -158,7 +160,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             ((ItemFriendViewHolder) holder).txtMessage.setVisibility(View.GONE);
             ((ItemFriendViewHolder) holder).txtTime.setVisibility(View.GONE);
             if (mapQuery.get(id) == null && mapChildListener.get(id) == null) {
-                mapQuery.put(id, FirebaseDatabase.getInstance().getReference()
+                mapQuery.put(id, mDatabaseRef
                         .child(context.getString(R.string.message_table) + "/" + idRoom)
                         .child(String.valueOf(StaticConfig.UID.hashCode()))
                         .limitToLast(1));
@@ -166,23 +168,23 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     mapChildListener.put(id, new ChildEventListener() {
                         @Override
                         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                            HashMap mapMessage = (HashMap) dataSnapshot.getValue();
-                            int position1 = holder.getAdapterPosition();
-                            if (mapMark.get(id) != null) {
-                                if (!mapMark.get(id)) {
-                                    listFriend.getListFriend()
-                                            .get(position1).message.text = id + mapMessage.get(context.getString(R.string.text));
-                                } else {
-                                    listFriend.getListFriend()
-                                            .get(position1).message.text = (String) mapMessage.get(context.getString(R.string.text));
-                                }
-                                notifyDataSetChanged();
-                                mapMark.put(id, false);
-                            } else {
-                                listFriend.getListFriend().get(position1).message.text = (String) mapMessage.get(context.getString(R.string.text));
-                                notifyDataSetChanged();
-                            }
-                            listFriend.getListFriend().get(position1).message.timestamp = (long) mapMessage.get(context.getString(R.string.timestamp));
+//                            HashMap mapMessage = (HashMap) dataSnapshot.getValue();
+//                            int position1 = holder.getAdapterPosition();
+//                            if (mapMark.get(id) != null) {
+//                                if (!mapMark.get(id)) {
+//                                    listFriend.getListFriend()
+//                                            .get(position1).message.text = id + mapMessage.get(context.getString(R.string.text));
+//                                } else {
+//                                    listFriend.getListFriend()
+//                                            .get(position1).message.text = (String) mapMessage.get(context.getString(R.string.text));
+//                                }
+//                                notifyDataSetChanged();
+//                                mapMark.put(id, false);
+//                            } else {
+//                                listFriend.getListFriend().get(position1).message.text = (String) mapMessage.get(context.getString(R.string.text));
+//                                notifyDataSetChanged();
+//                            }
+//                            listFriend.getListFriend().get(position1).message.timestamp = (long) mapMessage.get(context.getString(R.string.timestamp));
                         }
 
                         @Override
@@ -206,7 +208,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         }
                     });
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Log.e(getClass().getSimpleName(), e.toString());
                 }
 
 
@@ -229,7 +231,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
 
         if (mapQueryOnline.get(id) == null && mapChildListenerOnline.get(id) == null) {
-            mapQueryOnline.put(id, FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users) + "/" + id + "/status"));
+            mapQueryOnline.put(id, mDatabaseRef.child(context.getString(R.string.users) + "/" + id + "/status"));
             mapChildListenerOnline.put(id, new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -271,7 +273,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             ((ItemFriendViewHolder) holder).avata.setBorderWidth(0);
         }
 
-        FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users)).child(id)
+        mDatabaseRef.child(context.getString(R.string.users)).child(id)
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -306,7 +308,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private void deleteFriend(final String idFriend) {
         if (idFriend != null) {
             final FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-            FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users)).child(currentUser.getUid())
+            mDatabaseRef.child(context.getString(R.string.users)).child(currentUser.getUid())
                     .child(context.getString(R.string.friend_field)).orderByValue().equalTo(idFriend)
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -321,7 +323,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                             } else {
                                 String idRemoval = ((HashMap) dataSnapshot.getValue()).keySet().iterator()
                                         .next().toString();
-                                FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
+                                mDatabaseRef.child(context.getString(R.string.users))
                                         .child(currentUser.getUid()).child(context.getString(R.string.friend_field))
                                         .child(idRemoval).removeValue()
                                         .addOnCompleteListener(task -> {
@@ -345,13 +347,13 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                                                     .setMessage(context.getString(R.string.error_delete_friend))
                                                     .show();
                                         });
-                                FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
+                                mDatabaseRef.child(context.getString(R.string.users))
                                         .child(idFriend).child(context.getString(R.string.friend_field)).orderByValue().equalTo(currentUser.getUid())
                                         .addListenerForSingleValueEvent(new ValueEventListener() {
                                             @Override
                                             public void onDataChange(DataSnapshot dataSnapshot) {
                                                 String idRemoval = ((HashMap) dataSnapshot.getValue()).keySet().iterator().next().toString();
-                                                FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
+                                                mDatabaseRef.child(context.getString(R.string.users))
                                                         .child(idFriend).child(context.getString(R.string.friend_field))
                                                         .child(idRemoval).removeValue();
                                             }
@@ -362,12 +364,12 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                                             }
                                         });
 
-                                FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.message_table))
+                                mDatabaseRef.child(context.getString(R.string.message_table))
                                         .child(String.valueOf(idFriend.hashCode()))
                                         .child(String.valueOf(StaticConfig.UID.hashCode()))
                                         .removeValue();
 
-                                FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.message_table))
+                                mDatabaseRef.child(context.getString(R.string.message_table))
                                         .child(String.valueOf(StaticConfig.UID.hashCode()))
                                         .child(String.valueOf(idFriend.hashCode())).removeValue();
                             }
@@ -395,11 +397,11 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         ItemFriendViewHolder(View itemView) {
             super(itemView);
-            avata = (CircleImageView) itemView.findViewById(R.id.icon_avata);
-            txtName = (TextView) itemView.findViewById(R.id.txtName);
-            txtTime = (TextView) itemView.findViewById(R.id.txtTime);
-            txtMessage = (TextView) itemView.findViewById(R.id.txtMessage);
-            imgOnline = (ImageView) itemView.findViewById(R.id.user_single_online_icon);
+            avata = itemView.findViewById(R.id.icon_avata);
+            txtName = itemView.findViewById(R.id.txtName);
+            txtTime = itemView.findViewById(R.id.txtTime);
+            txtMessage = itemView.findViewById(R.id.txtMessage);
+            imgOnline = itemView.findViewById(R.id.user_single_online_icon);
         }
 
     }

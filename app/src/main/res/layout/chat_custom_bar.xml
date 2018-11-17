@@ -22,7 +22,8 @@
         android:background="@drawable/video"
         android:layout_toLeftOf="@+id/custom_bar_image"
         android:layout_marginTop="10dp"
-        android:layout_marginRight="15dp"/>
+        android:layout_marginRight="15dp"
+        android:visibility="gone"/>
 
     <Button
         android:id="@+id/btnCall"
