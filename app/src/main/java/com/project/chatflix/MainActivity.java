@@ -101,11 +101,11 @@ public class MainActivity extends AppCompatActivity {
                 ServiceUtils.stopServiceFriendChat(MainActivity.this.getApplicationContext(), false);
                 if (sectionsPagerAdapter.getItem(position) instanceof ChatFragment) {
                     floatButton.show();
-                    floatButton.setOnClickListener(((ChatFragment) sectionsPagerAdapter.getItem(position)).onClickFloatButton.getInstance(MainActivity.this));
+                    floatButton.setOnClickListener(fragmentChat.onClickFloatButton.getInstance(MainActivity.this));
                     floatButton.setImageResource(R.drawable.ic_fr);
                 } else if (sectionsPagerAdapter.getItem(position) instanceof GroupFragment) {
                     floatButton.show();
-                    floatButton.setOnClickListener(((GroupFragment) sectionsPagerAdapter.getItem(position)).onClickFloatButton.getInstance(MainActivity.this));
+                    floatButton.setOnClickListener(fragmentGroup.onClickFloatButton.getInstance(MainActivity.this));
                     floatButton.setImageResource(R.drawable.ic_gr);
                 } else {
                     floatButton.hide();
