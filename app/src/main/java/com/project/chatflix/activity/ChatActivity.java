@@ -5,8 +5,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,6 +25,9 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.esafirm.imagepicker.features.ImagePicker;
+import com.esafirm.imagepicker.model.Image;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -41,6 +48,7 @@ import com.project.chatflix.utils.StaticConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -270,12 +278,7 @@ public class ChatActivity extends AppCompatActivity {
         });
 
         btnAddImage.setOnClickListener(v -> {
-            Intent galleryIntent = new Intent();
-            galleryIntent.setType("image/*");
-            galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
-
-            startActivityForResult(Intent.createChooser(galleryIntent, "SELECT IMAGE"
-            ), GALLERY_PICK);
+            requestPermission();
         });
 
         //Make a phone call
@@ -358,6 +361,50 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
+    public void requestPermission() {
+
+        int checkCameraPer = ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA);
+        int checkWiteExPer = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int checkReadExPer = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE);
+        int permissionGranted = PackageManager.PERMISSION_GRANTED;
+
+        String[] permissions = new String[]{
+                android.Manifest.permission.CAMERA,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE};
+        //check Android 6+
+        if (Build.VERSION.SDK_INT >= 23) {
+            //check permission granted
+            //check permission granted
+            if (checkCameraPer != permissionGranted
+                    || checkWiteExPer != permissionGranted
+                    || checkReadExPer != permissionGranted
+                    ) {
+                //request Permissions
+                ActivityCompat.requestPermissions(this, permissions, StaticConfig.PERMISSION_CONSTANT);
+
+            } else {
+                sendToGallery();
+            }
+        } else {
+            sendToGallery();
+        }
+    }
+
+    private void sendToGallery() {
+        ImagePicker.create(this)
+                .folderMode(true) // folder mode (false by default)
+                .toolbarFolderTitle(getString(R.string.folder)) // folder selection title
+                .toolbarImageTitle(getString(R.string.tap_to_select)) // image selection title
+                .toolbarArrowColor(Color.WHITE) // Toolbar 'up' arrow color
+                .limit(1) // max images can be selected (99 by default)
+                .showCamera(true) // show camera or not (true by default)
+                .imageDirectory(getString(R.string.chat_flix)) // directory name for captured image  ("Camera" folder by default)
+                .theme(R.style.ImagePickerTheme) // must inherit ef_BaseTheme. please refer to sample
+                .enableLog(false) // disabling log
+                .start(); // start image picker activity with request code
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -374,8 +421,9 @@ public class ChatActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         try {
-            if (requestCode == GALLERY_PICK && resultCode == RESULT_OK) {
-                Uri imageUri = data.getData();
+            if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
+                List<Image> images = ImagePicker.getImages(data);
+                Uri imageUri = Uri.parse(images.get(0).getPath());
                 if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
 
                     current_user_ref = getString(R.string.message_table) + "/" + roomId + "/" +
@@ -433,9 +481,9 @@ public class ChatActivity extends AppCompatActivity {
                         Log.e(getClass().getSimpleName(), e.toString());
                     }
                 })
-                .addOnFailureListener(e -> {
-                    String s = "";
-                });
+                        .addOnFailureListener(e -> {
+                            String s = "";
+                        });
             }
         } catch (Exception e) {
             Log.e(getClass().getSimpleName(), e.toString());

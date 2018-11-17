@@ -23,4 +23,6 @@ public class StaticConfig {
     public static final String EMAIL_LABEL = "Email";
     public static final String SIGNOUT_LABEL = "Sign out";
     public static final String RESETPASS_LABEL = "Change Password";
+
+    public static final int PERMISSION_CONSTANT = 1;
 }

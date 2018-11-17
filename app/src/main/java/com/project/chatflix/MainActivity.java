@@ -4,11 +4,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
+import com.esafirm.imagepicker.features.ImagePicker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -34,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout layoutRequestFriend;
     private FirebaseAuth mAuth;
     private DatabaseReference mUserRef;
+    private InfoFragment fragmentInfo;
+    private ChatFragment fragmentChat;
+    private GroupFragment fragmentGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +54,11 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(tb);
         getSupportActionBar().setTitle("");
         layoutRequestFriend = findViewById(R.id.layout_request_friend);
+
+        fragmentInfo = new InfoFragment();
+        fragmentChat = new ChatFragment();
+        fragmentGroup = new GroupFragment();
+
         viewPager = findViewById(R.id.viewPagerMain);
         sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(sectionsPagerAdapter);
@@ -70,10 +81,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager) {
         sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        sectionsPagerAdapter.addFrag(new ChatFragment(), getString(R.string.chat));
-        sectionsPagerAdapter.addFrag(new GroupFragment(), getString(R.string.group));
-        sectionsPagerAdapter.addFrag(new InfoFragment(), getString(R.string.info));
-        floatButton.setOnClickListener(((ChatFragment) sectionsPagerAdapter.getItem(0)).onClickFloatButton.getInstance(this));
+        sectionsPagerAdapter.addFrag(fragmentChat, getString(R.string.chat));
+        sectionsPagerAdapter.addFrag(fragmentGroup, getString(R.string.group));
+        sectionsPagerAdapter.addFrag(fragmentInfo, getString(R.string.info));
+        floatButton.setOnClickListener(fragmentChat.onClickFloatButton.getInstance(this));
         viewPager.setAdapter(sectionsPagerAdapter);
         viewPager.setOffscreenPageLimit(3);
     }
@@ -171,4 +182,17 @@ public class MainActivity extends AppCompatActivity {
 //            onServiceConnected();
 //        }
 //    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
+            if (data == null) {
+                Toast.makeText(this, getString(R.string.error_occured_please_try_again), Toast.LENGTH_LONG).show();
+                return;
+            }
+            fragmentInfo.handleImageUpload(data);
+        }
+    }
+
 }

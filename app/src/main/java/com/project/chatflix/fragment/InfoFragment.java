@@ -3,11 +3,18 @@ package com.project.chatflix.fragment;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,6 +27,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.esafirm.imagepicker.features.ImagePicker;
+import com.esafirm.imagepicker.model.Image;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -141,84 +151,6 @@ public class InfoFragment extends Fragment {
         });
     }
 
-    private View.OnClickListener onAvatarClick = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-
-            new AlertDialog.Builder(context, R.style.AlertDialogTheme)
-                    .setTitle(getString(R.string.avatar))
-                    .setMessage(getString(R.string.sure_want_to_change_avatar))
-                    .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-                        Intent intent = new Intent();
-                        intent.setType("image/*");
-                        intent.setAction(Intent.ACTION_PICK);
-                        startActivityForResult(Intent.createChooser(intent, getString(R.string.select_picture)), PICK_IMAGE);
-                        dialogInterface.dismiss();
-                    })
-                    .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {
-                        dialogInterface.dismiss();
-                    }).show();
-        }
-    };
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE && resultCode == Activity.RESULT_OK) {
-            if (data == null) {
-                Toast.makeText(context, getString(R.string.error_occured_please_try_again), Toast.LENGTH_LONG).show();
-                return;
-            }
-            try {
-                InputStream inputStream = context.getContentResolver().openInputStream(data.getData());
-
-                Bitmap imgBitmap = BitmapFactory.decodeStream(inputStream);
-                imgBitmap = ImageUtils.cropToSquare(imgBitmap);
-                InputStream is = ImageUtils.convertBitmapToInputStream(imgBitmap);
-                final Bitmap liteImage = ImageUtils.makeImageLite(is,
-                        imgBitmap.getWidth(), imgBitmap.getHeight(),
-                        ImageUtils.AVATAR_WIDTH, ImageUtils.AVATAR_HEIGHT);
-
-                String imageBase64 = ImageUtils.encodeBase64(liteImage);
-                myAccount.avatar = imageBase64;
-
-                waitingDialog.setCancelable(false)
-                        .setTitle(getString(R.string.avatar_updating))
-                        .setTopColorRes(R.color.colorPrimary)
-                        .show();
-
-                userDB.child(getString(R.string.avatar_field)).setValue(imageBase64)
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-
-                                waitingDialog.dismiss();
-                                SharedPreferenceHelper preferenceHelper = SharedPreferenceHelper
-                                        .getInstance(context);
-                                preferenceHelper.saveUserInfo(myAccount);
-                                circleAvatar.setImageDrawable(ImageUtils.roundedImage(context,
-                                        liteImage));
-
-                                new LovelyInfoDialog(context)
-                                        .setTopColorRes(R.color.colorPrimary)
-                                        .setTitle(getString(R.string.success))
-                                        .setMessage(getString(R.string.update_avatar_success))
-                                        .show();
-                            }
-                        })
-                        .addOnFailureListener(e -> {
-                            waitingDialog.dismiss();
-                            new LovelyInfoDialog(context)
-                                    .setTopColorRes(R.color.colorAccent)
-                                    .setTitle(getString(R.string.failed))
-                                    .setMessage(getString(R.string.error_upload_avatar))
-                                    .show();
-                        });
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public void setupArrayListInfo(User myAccount) {
         listConfig.clear();
         Configuration userNameConfig = new Configuration(StaticConfig.USERNAME_LABEL, myAccount.name, R.mipmap.ic_account_box);
@@ -251,4 +183,120 @@ public class InfoFragment extends Fragment {
         }
     }
 
+    private View.OnClickListener onAvatarClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+
+            new AlertDialog.Builder(context, R.style.AlertDialogTheme)
+                    .setTitle(getString(R.string.avatar))
+                    .setMessage(getString(R.string.sure_want_to_change_avatar))
+                    .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
+                        dialogInterface.dismiss();
+                        requestPermission();
+                    })
+                    .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {
+                        dialogInterface.dismiss();
+                    }).show();
+        }
+    };
+
+    public void handleImageUpload(Intent data) {
+        try {
+            List<Image> images = ImagePicker.getImages(data);
+
+            Bitmap imgBitmap = BitmapFactory.decodeFile(images.get(0).getPath());
+            imgBitmap = ImageUtils.cropToSquare(imgBitmap);
+            InputStream is = ImageUtils.convertBitmapToInputStream(imgBitmap);
+            final Bitmap liteImage = ImageUtils.makeImageLite(is,
+                    imgBitmap.getWidth(), imgBitmap.getHeight(),
+                    ImageUtils.AVATAR_WIDTH, ImageUtils.AVATAR_HEIGHT);
+
+            String imageBase64 = ImageUtils.encodeBase64(liteImage);
+            myAccount.avatar = imageBase64;
+
+            waitingDialog.setCancelable(false)
+                    .setTitle(getString(R.string.avatar_updating))
+                    .setTopColorRes(R.color.colorPrimary)
+                    .show();
+
+            userDB.child(getString(R.string.avatar_field)).setValue(imageBase64)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+
+                            waitingDialog.dismiss();
+                            SharedPreferenceHelper preferenceHelper = SharedPreferenceHelper
+                                    .getInstance(context);
+                            preferenceHelper.saveUserInfo(myAccount);
+                            circleAvatar.setImageDrawable(ImageUtils.roundedImage(context,
+                                    liteImage));
+
+                            new LovelyInfoDialog(context)
+                                    .setTopColorRes(R.color.colorPrimary)
+                                    .setTitle(getString(R.string.success))
+                                    .setMessage(getString(R.string.update_avatar_success))
+                                    .show();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        waitingDialog.dismiss();
+                        new LovelyInfoDialog(context)
+                                .setTopColorRes(R.color.colorAccent)
+                                .setTitle(getString(R.string.failed))
+                                .setMessage(getString(R.string.error_upload_avatar))
+                                .show();
+                    });
+        } catch (Exception e) {
+            Log.e(getClass().getSimpleName(), e.toString());
+        }
+    }
+
+    public void requestPermission() {
+
+        int checkCameraPer = ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.CAMERA);
+        int checkWiteExPer = ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int checkReadExPer = ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.READ_EXTERNAL_STORAGE);
+        int permissionGranted = PackageManager.PERMISSION_GRANTED;
+
+        String[] permissions = new String[]{
+                android.Manifest.permission.CAMERA,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE};
+        //check Android 6+
+        if (Build.VERSION.SDK_INT >= 23) {
+            //check permission granted
+            //check permission granted
+            if (checkCameraPer != permissionGranted
+                    || checkWiteExPer != permissionGranted
+                    || checkReadExPer != permissionGranted
+                    ) {
+                //request Permissions
+                ActivityCompat.requestPermissions(getActivity(), permissions, StaticConfig.PERMISSION_CONSTANT);
+
+            } else {
+                sendToGallery();
+            }
+        } else {
+            sendToGallery();
+        }
+    }
+
+    private void sendToGallery() {
+        ImagePicker.create(getActivity())
+                .folderMode(true) // folder mode (false by default)
+                .toolbarFolderTitle(getString(R.string.folder)) // folder selection title
+                .toolbarImageTitle(getString(R.string.tap_to_select)) // image selection title
+                .toolbarArrowColor(Color.WHITE) // Toolbar 'up' arrow color
+                .limit(1) // max images can be selected (99 by default)
+                .showCamera(true) // show camera or not (true by default)
+                .imageDirectory(getString(R.string.chat_flix)) // directory name for captured image  ("Camera" folder by default)
+                .theme(R.style.ImagePickerTheme) // must inherit ef_BaseTheme. please refer to sample
+                .enableLog(false) // disabling log
+                .start(); // start image picker activity with request code
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    }
 }
