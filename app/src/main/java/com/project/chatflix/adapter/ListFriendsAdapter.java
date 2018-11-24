@@ -28,6 +28,7 @@ import com.project.chatflix.R;
 import com.project.chatflix.activity.ChatActivity;
 import com.project.chatflix.fragment.ChatFragment;
 import com.project.chatflix.object.ListFriend;
+import com.project.chatflix.object.Message;
 import com.project.chatflix.utils.StaticConfig;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
@@ -44,7 +45,6 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     private ListFriend listFriend;
     private Context context;
-    public static Map<String, Boolean> mapMark;
     private ChatFragment fragment;
     LovelyProgressDialog dialogWaitDeleting;
     private DatabaseReference mDatabaseRef;
@@ -52,7 +52,6 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public ListFriendsAdapter(Context context, ListFriend listFriend, ChatFragment fragment) {
         this.listFriend = listFriend;
         this.context = context;
-        mapMark = new HashMap<>();
         this.fragment = fragment;
         dialogWaitDeleting = new LovelyProgressDialog(context);
         mDatabaseRef = FirebaseDatabase.getInstance().getReference();
@@ -65,58 +64,27 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder1, final int position) {
         final String name = listFriend.getListFriend().get(position).name;
         final String id = listFriend.getListFriend().get(position).id;
-        final String idRoom = listFriend.getListFriend().get(position).idRoom;
-        ((ItemFriendViewHolder) holder).txtName.setText(name);
+        ItemFriendViewHolder holder = (ItemFriendViewHolder) holder1;
+        holder.txtName.setText(name);
 
         addEvents(holder, position);
-
-        if (listFriend.getListFriend().get(position).message.text.length() > 0) {
-            ((ItemFriendViewHolder) holder).txtMessage.setVisibility(View.VISIBLE);
-            ((ItemFriendViewHolder) holder).txtTime.setVisibility(View.VISIBLE);
-
-            if (!listFriend.getListFriend().get(position).message.text.startsWith(id)) {
-                ((ItemFriendViewHolder) holder).txtMessage.setText(listFriend.getListFriend()
-                        .get(position).message.text);
-                ((ItemFriendViewHolder) holder).txtMessage.setTypeface(Typeface.DEFAULT);
-                ((ItemFriendViewHolder) holder).txtName.setTypeface(Typeface.DEFAULT);
-            } else {
-                ((ItemFriendViewHolder) holder).txtMessage.setText(listFriend.getListFriend()
-                        .get(position).message.text.substring((id + "").length()));
-                ((ItemFriendViewHolder) holder).txtMessage.setTypeface(Typeface.DEFAULT_BOLD);
-                ((ItemFriendViewHolder) holder).txtName.setTypeface(Typeface.DEFAULT_BOLD);
-            }
-
-            String time = new SimpleDateFormat("EEE, d MMM yyyy").format(new Date(listFriend.getListFriend().get(position).message.timestamp));
-            String today = new SimpleDateFormat("EEE, d MMM yyyy").format(new Date(System.currentTimeMillis()));
-            if (today.equals(time)) {
-                ((ItemFriendViewHolder) holder).txtTime.setText(new SimpleDateFormat("HH:mm")
-                        .format(new Date(listFriend.getListFriend().get(position).message.timestamp)));
-            } else {
-                ((ItemFriendViewHolder) holder).txtTime.setText(new SimpleDateFormat("MMM d")
-                        .format(new Date(listFriend.getListFriend().get(position).message.timestamp)));
-            }
-
-        } else {
-            ((ItemFriendViewHolder) holder).txtMessage.setVisibility(View.GONE);
-            ((ItemFriendViewHolder) holder).txtTime.setVisibility(View.GONE);
-            mapMark.put(id, true);
-        }
+        getLastMessage(holder);
 
         if (listFriend.getListFriend().get(position).avatar.equals(StaticConfig.STR_DEFAULT_BASE64)) {
-            ((ItemFriendViewHolder) holder).avata.setImageResource(R.drawable.default_avatar);
+            holder.avata.setImageResource(R.drawable.default_avatar);
         } else {
             byte[] decodedString = Base64.decode(listFriend.getListFriend().get(position).avatar, Base64.DEFAULT);
             Bitmap src = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-            ((ItemFriendViewHolder) holder).avata.setImageBitmap(src);
+            holder.avata.setImageBitmap(src);
         }
 
         if (listFriend.getListFriend().get(position).status.isOnline) {
-            ((ItemFriendViewHolder) holder).avata.setBorderWidth(6);
+            holder.avata.setBorderWidth(6);
         } else {
-            ((ItemFriendViewHolder) holder).avata.setBorderWidth(0);
+            holder.avata.setBorderWidth(0);
         }
 
         mDatabaseRef.child(context.getString(R.string.users)).child(id)
@@ -126,9 +94,9 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         if (dataSnapshot.hasChild(context.getString(R.string.online))) {
                             String userOnline = dataSnapshot.child(context.getString(R.string.online)).getValue().toString();
                             if (userOnline.equals(context.getString(R.string.true_field))) {
-                                ((ItemFriendViewHolder) holder).imgOnline.setVisibility(View.VISIBLE);
+                                holder.imgOnline.setVisibility(View.VISIBLE);
                             } else {
-                                ((ItemFriendViewHolder) holder).imgOnline.setVisibility(View.INVISIBLE);
+                                holder.imgOnline.setVisibility(View.INVISIBLE);
                             }
                         }
                     }
@@ -138,7 +106,58 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
                     }
                 });
+    }
 
+    private void getLastMessage(ItemFriendViewHolder holder) {
+        int position = holder.getAdapterPosition();
+        String id = listFriend.getListFriend().get(position).id;
+        String idRoom = listFriend.getListFriend().get(position).idRoom;
+
+        mDatabaseRef.child(context.getString(R.string.message_table))
+                .child(idRoom).limitToLast(1)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        if (dataSnapshot.getChildrenCount() != 0) {
+
+                            holder.txtMessage.setVisibility(View.VISIBLE);
+                            holder.txtTime.setVisibility(View.VISIBLE);
+
+                            Message message = dataSnapshot.getChildren().iterator().next().getValue(Message.class);
+
+                            if (!message.idSender.startsWith(id)) {
+                                holder.txtMessage.setText("You: " + message.text);
+                                holder.txtMessage.setTypeface(Typeface.DEFAULT);
+                                holder.txtName.setTypeface(Typeface.DEFAULT);
+                            } else {
+                                holder.txtMessage.setText(message.text);
+                                holder.txtMessage.setTypeface(Typeface.DEFAULT_BOLD);
+                                holder.txtName.setTypeface(Typeface.DEFAULT_BOLD);
+                            }
+
+                            String time = new SimpleDateFormat("EEE, d MMM yyyy").format(new Date(message.timestamp));
+                            String today = new SimpleDateFormat("EEE, d MMM yyyy").format(new Date(System.currentTimeMillis()));
+                            if (today.equals(time)) {
+                                holder.txtTime.setText(new SimpleDateFormat("HH:mm")
+                                        .format(new Date(message.timestamp)));
+                            } else {
+                                holder.txtTime.setText(new SimpleDateFormat("MMM d")
+                                        .format(new Date(message.timestamp)));
+                            }
+
+                        } else {
+                            holder.txtMessage.setVisibility(View.GONE);
+                            holder.txtTime.setVisibility(View.GONE);
+                        }
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
     }
 
     private void addEvents(RecyclerView.ViewHolder holder, int position) {
@@ -166,8 +185,6 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     } else {
                         ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeResource(context.getResources(), R.drawable.default_avatar));
                     }
-
-                    mapMark.put(id, null);
                     fragment.startActivityForResult(intent, ChatFragment.ACTION_START_CHAT);
                 });
 
@@ -187,7 +204,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                                         .setCancelable(false)
                                         .setTopColorRes(R.color.colorAccent)
                                         .show();
-                                deleteFriend(idFriendRemoval);
+                                deleteFriend(idFriendRemoval, position);
                             })
                             .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {
                                 dialogInterface.dismiss();
@@ -202,12 +219,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         return listFriend.getListFriend() != null ? listFriend.getListFriend().size() : 0;
     }
 
-    /**
-     * Delete friend
-     *
-     * @param idFriend
-     */
-    private void deleteFriend(final String idFriend) {
+    private void deleteFriend(final String idFriend, int position) {
         if (idFriend != null) {
             mDatabaseRef.child(context.getString(R.string.users)).child(StaticConfig.UID)
                     .child(context.getString(R.string.friend_field)).orderByValue().equalTo(idFriend)
@@ -224,9 +236,8 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                             } else {
                                 String idRemoval = ((HashMap) dataSnapshot.getValue()).keySet().iterator()
                                         .next().toString();
-                                mDatabaseRef.child(context.getString(R.string.users))
-                                        .child(StaticConfig.UID).child(context.getString(R.string.friend_field))
-                                        .child(idRemoval).removeValue()
+                                mDatabaseRef.child(context.getString(R.string.users)).child(StaticConfig.UID)
+                                        .child(context.getString(R.string.friend_field)).child(idRemoval).removeValue()
                                         .addOnCompleteListener(task -> {
                                             dialogWaitDeleting.dismiss();
 
@@ -249,7 +260,9 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                                                     .show();
                                         });
                                 mDatabaseRef.child(context.getString(R.string.users))
-                                        .child(idFriend).child(context.getString(R.string.friend_field)).orderByValue().equalTo(StaticConfig.UID)
+                                        .child(idFriend).child(context.getString(R.string.friend_field))
+                                        .orderByValue()
+                                        .equalTo(StaticConfig.UID)
                                         .addListenerForSingleValueEvent(new ValueEventListener() {
                                             @Override
                                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -266,13 +279,9 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                                         });
 
                                 mDatabaseRef.child(context.getString(R.string.message_table))
-                                        .child(String.valueOf(idFriend.hashCode()))
-                                        .child(String.valueOf(StaticConfig.UID.hashCode()))
+                                        .child(listFriend.getListFriend().get(position).idRoom)
                                         .removeValue();
 
-                                mDatabaseRef.child(context.getString(R.string.message_table))
-                                        .child(String.valueOf(StaticConfig.UID.hashCode()))
-                                        .child(String.valueOf(idFriend.hashCode())).removeValue();
                             }
                         }
 

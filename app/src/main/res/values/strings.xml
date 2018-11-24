@@ -125,4 +125,5 @@
     <string name="tap_to_select">Tap to select</string>
     <string name="chat_flix">chatflix</string>
     <string name="status_field">status</string>
+    <string name="cannot_add_your_self">Không thể kết bạn với chính mình!</string>
 </resources>

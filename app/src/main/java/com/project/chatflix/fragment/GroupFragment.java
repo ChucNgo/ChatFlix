@@ -1,25 +1,18 @@
 package com.project.chatflix.fragment;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -27,7 +20,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.project.chatflix.R;
 import com.project.chatflix.activity.AddGroupActivity;
 import com.project.chatflix.adapter.ListGroupsAdapter;
-import com.project.chatflix.database.GroupDB;
+import com.project.chatflix.mycustom.FragGroupClickFloatButton;
 import com.project.chatflix.object.Group;
 import com.project.chatflix.utils.StaticConfig;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
@@ -68,9 +61,9 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                              Bundle savedInstanceState) {
         View layout = inflater.inflate(R.layout.fragment_group, container, false);
 
-        listGroup = GroupDB.getInstance(getContext()).getListGroups();
-        recyclerListGroups = (RecyclerView) layout.findViewById(R.id.recycleListGroup);
-        mSwipeRefreshLayout = (SwipeRefreshLayout) layout.findViewById(R.id.swipeRefreshLayout);
+        listGroup = new ArrayList<>();
+        recyclerListGroups = layout.findViewById(R.id.recycleListGroup);
+        mSwipeRefreshLayout = layout.findViewById(R.id.swipeRefreshLayout);
         mSwipeRefreshLayout.setOnRefreshListener(this);
         GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
         recyclerListGroups.setLayoutManager(layoutManager);
@@ -131,7 +124,6 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         if (requestCode == REQUEST_EDIT_GROUP && resultCode == Activity.RESULT_OK) {
             listGroup.clear();
             ListGroupsAdapter.listFriend = null;
-            GroupDB.getInstance(getContext()).dropDB();
             getListGroup();
         }
     }
@@ -155,7 +147,6 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                                 listGroup.get(indexGroup).groupInfo.put(getActivity().getString(R.string.name_field), (String) mapGroupInfo.get(getActivity().getString(R.string.name_field)));
                                 listGroup.get(indexGroup).groupInfo.put(getActivity().getString(R.string.admin), (String) mapGroupInfo.get(getActivity().getString(R.string.admin)));
                             }
-                            GroupDB.getInstance(getContext()).addGroup(listGroup.get(indexGroup));
                             getGroupInfo(indexGroup + 1);
                         }
 
@@ -171,7 +162,6 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     public void onRefresh() {
         listGroup.clear();
         ListGroupsAdapter.listFriend = null;
-        GroupDB.getInstance(getContext()).dropDB();
         adapter.notifyDataSetChanged();
         getListGroup();
     }
@@ -224,7 +214,6 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
             FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + group.id).removeValue()
                     .addOnCompleteListener(task -> {
                         progressDialog.dismiss();
-                        GroupDB.getInstance(getContext()).deleteGroup(group.id);
                         listGroup.remove(group);
                         adapter.notifyDataSetChanged();
                         Toast.makeText(getContext(), getActivity().getString(R.string.group_deleted), Toast.LENGTH_SHORT).show();
@@ -243,7 +232,8 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
             ;
         } else {
             FirebaseDatabase.getInstance().getReference()
-                    .child(getActivity().getString(R.string.users) + "/" + group.member.get(index) + "/group/" + group.id).removeValue()
+                    .child(getActivity().getString(R.string.users) + "/" + group.member.get(index) + "/" + getString(R.string.group_field) + "/" + group.id)
+                    .removeValue()
                     .addOnCompleteListener(task -> {
                         deleteGroup(group, index + 1);
                     })
@@ -298,7 +288,6 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
                                         listGroup.remove(group);
                                         adapter.notifyDataSetChanged();
-                                        GroupDB.getInstance(getContext()).deleteGroup(group.id);
                                         new LovelyInfoDialog(getContext())
                                                 .setTopColorRes(R.color.colorAccent)
                                                 .setTitle(getActivity().getString(R.string.success))
@@ -328,20 +317,5 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                     }
                 });
 
-    }
-
-    public class FragGroupClickFloatButton implements View.OnClickListener {
-
-        Context context;
-
-        public FragGroupClickFloatButton getInstance(Context context) {
-            this.context = context;
-            return this;
-        }
-
-        @Override
-        public void onClick(View view) {
-            startActivity(new Intent(getContext(), AddGroupActivity.class));
-        }
     }
 }

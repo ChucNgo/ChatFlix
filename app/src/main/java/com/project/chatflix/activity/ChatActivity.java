@@ -55,7 +55,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatActivity extends AppCompatActivity {
     public static boolean isActive = false;
-    private static final int GALLERY_PICK = 1;
     Toolbar tbChat;
 
     private RecyclerView recyclerChat;
@@ -84,10 +83,8 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
-
         initView();
         addEvents();
-
     }
 
     private void initView() {
@@ -103,8 +100,6 @@ public class ChatActivity extends AppCompatActivity {
         kindOfChat = intentData.getStringExtra(getString(R.string.kind_of_chat));
         roomId = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
 
-        Log.e("roomId", roomId);
-
         final String nameFriend = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND);
         conversation = new Conversation();
         btnSend = findViewById(R.id.btnSend);
@@ -118,7 +113,6 @@ public class ChatActivity extends AppCompatActivity {
         mProfileImage = findViewById(R.id.custom_bar_image);
         btnCall = findViewById(R.id.btnCall);
         btnVideo = findViewById(R.id.btnVideo);
-        // Send Image
         btnAddImage = findViewById(R.id.btnAddImage);
 
         editWriteMessage = findViewById(R.id.editWriteMessage);
@@ -139,8 +133,7 @@ public class ChatActivity extends AppCompatActivity {
 
         if (idFriend != null && nameFriend != null) {
             if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
-                mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
-//                        .child(String.valueOf(StaticConfig.UID))
+                mDatabaseRef.child(getString(R.string.message_table)).child(roomId)
                         .addChildEventListener(new ChildEventListener() {
                             @Override
                             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -253,7 +246,6 @@ public class ChatActivity extends AppCompatActivity {
 
     private void addEvents() {
         btnSend.setOnClickListener(v -> {
-
             String content = editWriteMessage.getText().toString().trim();
 
             if (content.length() > 0) {
@@ -268,12 +260,7 @@ public class ChatActivity extends AppCompatActivity {
                 if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
                     mDatabaseRef.child(getString(R.string.message_table))
                             .child(roomId)
-//                            .child(String.valueOf(StaticConfig.UID))
                             .push().setValue(newMessage);
-//                    mDatabaseRef.child(getString(R.string.message_table))
-//                            .child(String.valueOf(StaticConfig.UID))
-//                            .child(roomId)
-//                            .push().setValue(newMessage);
                 } else {
                     mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
                             .push().setValue(newMessage);
@@ -475,10 +462,10 @@ public class ChatActivity extends AppCompatActivity {
                             editWriteMessage.setText("");
 
                             mDatabaseRef.updateChildren(messageUserMap, (databaseError, databaseReference) -> {
-                                        if (databaseError != null) {
-                                            Log.e(getClass().getSimpleName(), databaseError.getMessage());
-                                        }
-                                    });
+                                if (databaseError != null) {
+                                    Log.e(getClass().getSimpleName(), databaseError.getMessage());
+                                }
+                            });
                         }
                     } catch (Exception e) {
                         Log.e(getClass().getSimpleName(), e.toString());

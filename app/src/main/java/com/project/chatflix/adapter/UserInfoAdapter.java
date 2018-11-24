@@ -69,8 +69,6 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
                             .child(StaticConfig.UID)
                             .child(context.getString(R.string.online)).setValue(ServerValue.TIMESTAMP);
                     FirebaseAuth.getInstance().signOut();
-                    FriendDB.getInstance(context).dropDB();
-                    GroupDB.getInstance(context).dropDB();
 
                     context.startActivity(new Intent(context, LoginActivity.class));
                 });
