@@ -15,10 +15,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 import com.project.chatflix.R;
-import com.project.chatflix.adapter.ListPeopleAdapter;
+import com.project.chatflix.adapter.ListChoosePeopleAdapter;
 import com.project.chatflix.database.FriendDB;
 import com.project.chatflix.database.GroupDB;
 import com.project.chatflix.object.Group;
@@ -34,7 +33,7 @@ import java.util.Set;
 public class AddGroupActivity extends AppCompatActivity {
 
     private RecyclerView recyclerListFriend;
-    private ListPeopleAdapter adapter;
+    private ListChoosePeopleAdapter adapter;
     private ListFriend listFriend;
     private LinearLayout btnAddGroup;
     private Set<String> listIDChoose;
@@ -112,7 +111,7 @@ public class AddGroupActivity extends AppCompatActivity {
 
         recyclerListFriend = (RecyclerView) findViewById(R.id.recycleListFriend);
         recyclerListFriend.setLayoutManager(linearLayoutManager);
-        adapter = new ListPeopleAdapter(this, listFriend, btnAddGroup, listIDChoose, listIDRemove, isEditGroup, groupEdit);
+        adapter = new ListChoosePeopleAdapter(this, listFriend, btnAddGroup, listIDChoose, listIDRemove, isEditGroup, groupEdit);
         recyclerListFriend.setAdapter(adapter);
 
 

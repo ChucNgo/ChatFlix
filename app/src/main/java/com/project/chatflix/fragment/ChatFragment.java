@@ -6,13 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ChatFragment extends Fragment {
+public class ChatFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener{
 
     private FirebaseAuth mAuth;
     private RecyclerView recyclerListFrends;
@@ -78,18 +78,18 @@ public class ChatFragment extends Fragment {
 
         View layout = inflater.inflate(R.layout.fragment_chat, container, false);
         initView(layout);
-        addEvent();
         return layout;
     }
 
     private void initView(View layout) {
         mDatabaseRef = FirebaseDatabase.getInstance().getReference();
 
-        recyclerListFrends = (RecyclerView) layout.findViewById(R.id.recycleListFriend);
+        recyclerListFrends = layout.findViewById(R.id.recycleListFriend);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(),
                 LinearLayoutManager.VERTICAL, false);
         recyclerListFrends.setLayoutManager(linearLayoutManager);
-        mSwipeRefreshLayout = (SwipeRefreshLayout) layout.findViewById(R.id.swipeRefreshLayout);
+        mSwipeRefreshLayout = layout.findViewById(R.id.swipeRefreshLayout);
+        mSwipeRefreshLayout.setOnRefreshListener(this::onRefresh);
         prefHelper = SharedPreferenceHelper.getInstance(layout.getContext());
         mAuth = FirebaseAuth.getInstance();
         listFriendID = new ArrayList<>();
@@ -101,7 +101,6 @@ public class ChatFragment extends Fragment {
                 for (Friend friend : dataListFriend.getListFriend()) {
                     listFriendID.add(friend.id);
                 }
-
             }
         }
 
@@ -141,14 +140,13 @@ public class ChatFragment extends Fragment {
         getListFriendUId();
     }
 
-    private void addEvent() {
-        mSwipeRefreshLayout.setOnRefreshListener(() -> {
-            listFriendID.clear();
-            dataListFriend.getListFriend().clear();
-            adapter.notifyDataSetChanged();
-            FriendDB.getInstance(getContext()).dropDB();
-            getListFriendUId();
-        });
+    @Override
+    public void onRefresh() {
+        listFriendID.clear();
+        dataListFriend.getListFriend().clear();
+        adapter.notifyDataSetChanged();
+        FriendDB.getInstance(getContext()).dropDB();
+        getListFriendUId();
     }
 
     @Override
@@ -171,10 +169,8 @@ public class ChatFragment extends Fragment {
      */
     private void getListFriendUId() {
 
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-
         mDatabaseRef.child(getActivity().getString(R.string.users))
-                .child(currentUser.getUid()).child(getActivity().getString(R.string.friend_field))
+                .child(StaticConfig.UID).child(getActivity().getString(R.string.friend_field))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -206,7 +202,6 @@ public class ChatFragment extends Fragment {
             adapter.notifyDataSetChanged();
             dialogFindAllFriend.dismiss();
             mSwipeRefreshLayout.setRefreshing(false);
-//            detectFriendOnline.start();
         } else {
             final String id = listFriendID.get(index);
             mDatabaseRef.child(getActivity().getString(R.string.users) + "/" + id)
@@ -220,7 +215,7 @@ public class ChatFragment extends Fragment {
                                 user.email = (String) mapUserInfo.get(getActivity().getString(R.string.email));
                                 user.avatar = (String) mapUserInfo.get(getActivity().getString(R.string.avatar_field));
                                 user.id = id;
-                                user.idRoom = (StaticConfig.UID + id).hashCode() + "";
+                                user.idRoom = id.compareTo(StaticConfig.UID) > 0 ? (StaticConfig.UID + id).hashCode() + "" : "" + (id + StaticConfig.UID).hashCode();
                                 dataListFriend.getListFriend().add(user);
                                 FriendDB.getInstance(getContext()).addFriend(user);
                             }

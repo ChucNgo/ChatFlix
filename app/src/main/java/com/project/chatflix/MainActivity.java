@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -23,7 +22,6 @@ import com.project.chatflix.adapter.SectionsPagerAdapter;
 import com.project.chatflix.fragment.ChatFragment;
 import com.project.chatflix.fragment.GroupFragment;
 import com.project.chatflix.fragment.InfoFragment;
-import com.project.chatflix.service.ServiceUtils;
 import com.project.chatflix.utils.StaticConfig;
 
 public class MainActivity extends AppCompatActivity {
@@ -98,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onPageSelected(int position) {
-                ServiceUtils.stopServiceFriendChat(MainActivity.this.getApplicationContext(), false);
                 if (sectionsPagerAdapter.getItem(position) instanceof ChatFragment) {
                     floatButton.show();
                     floatButton.setOnClickListener(fragmentChat.onClickFloatButton.getInstance(MainActivity.this));
@@ -133,7 +130,6 @@ public class MainActivity extends AppCompatActivity {
             StaticConfig.UID = currentUser.getUid();
             mUserRef.child(getString(R.string.online)).setValue(getString(R.string.true_field));
         }
-        ServiceUtils.stopServiceFriendChat(getApplicationContext(), false);
 
 //        if (getSinchServiceInterface().isStarted()) {
 //
@@ -150,30 +146,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-//        Toast.makeText(MainActivity.this,"Start friend chat service",Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    protected void onPause() {
-        ServiceUtils.startServiceFriendChat(getApplicationContext());
-//        Toast.makeText(this,"Start friend chat service",Toast.LENGTH_SHORT).show();
-        super.onPause();
-    }
-
-    @Override
     public void onDestroy() {
         super.onDestroy();
 //        if (getSinchServiceInterface() != null) {
 //            getSinchServiceInterface().stopClient();
 //            Toast.makeText(MainActivity.this,"Stop Service Sinch",Toast.LENGTH_SHORT).show();
 //        }
-        if (mAuth.getCurrentUser() != null) {
-            FirebaseDatabase.getInstance().getReference().child(getString(R.string.users))
-                    .child(mAuth.getCurrentUser().getUid())
-                    .child(getString(R.string.online)).setValue(ServerValue.TIMESTAMP);
-        }
+        FirebaseDatabase.getInstance().getReference().child(getString(R.string.users))
+                .child(StaticConfig.UID)
+                .child(getString(R.string.online)).setValue(ServerValue.TIMESTAMP);
+
     }
 //    @Override
 //    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {

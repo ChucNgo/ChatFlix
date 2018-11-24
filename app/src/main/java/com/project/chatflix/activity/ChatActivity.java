@@ -102,6 +102,9 @@ public class ChatActivity extends AppCompatActivity {
         idFriend = intentData.getCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID);
         kindOfChat = intentData.getStringExtra(getString(R.string.kind_of_chat));
         roomId = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
+
+        Log.e("roomId", roomId);
+
         final String nameFriend = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND);
         conversation = new Conversation();
         btnSend = findViewById(R.id.btnSend);
@@ -137,7 +140,7 @@ public class ChatActivity extends AppCompatActivity {
         if (idFriend != null && nameFriend != null) {
             if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
                 mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
-                        .child(String.valueOf(StaticConfig.UID.hashCode()))
+//                        .child(String.valueOf(StaticConfig.UID))
                         .addChildEventListener(new ChildEventListener() {
                             @Override
                             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -263,17 +266,18 @@ public class ChatActivity extends AppCompatActivity {
                 newMessage.timestamp = System.currentTimeMillis();
 
                 if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
-                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
-                            .child(String.valueOf(StaticConfig.UID.hashCode()))
+                    mDatabaseRef.child(getString(R.string.message_table))
+                            .child(roomId)
+//                            .child(String.valueOf(StaticConfig.UID))
                             .push().setValue(newMessage);
-                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table))
-                            .child(String.valueOf(StaticConfig.UID.hashCode())).child(roomId)
-                            .push().setValue(newMessage);
+//                    mDatabaseRef.child(getString(R.string.message_table))
+//                            .child(String.valueOf(StaticConfig.UID))
+//                            .child(roomId)
+//                            .push().setValue(newMessage);
                 } else {
-                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + roomId)
+                    mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
                             .push().setValue(newMessage);
                 }
-
             }
         });
 
@@ -470,8 +474,7 @@ public class ChatActivity extends AppCompatActivity {
 
                             editWriteMessage.setText("");
 
-                            FirebaseDatabase.getInstance().getReference()
-                                    .updateChildren(messageUserMap, (databaseError, databaseReference) -> {
+                            mDatabaseRef.updateChildren(messageUserMap, (databaseError, databaseReference) -> {
                                         if (databaseError != null) {
                                             Log.e(getClass().getSimpleName(), databaseError.getMessage());
                                         }

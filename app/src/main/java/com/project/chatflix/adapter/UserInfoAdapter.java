@@ -66,14 +66,11 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
                 builder.setMessage(context.getResources().getString(R.string.sign_out_message));
                 builder.setPositiveButton(context.getString(R.string.yes), (dialogInterface, i) -> {
                     FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
-                            .child(mAuth.getCurrentUser().getUid())
+                            .child(StaticConfig.UID)
                             .child(context.getString(R.string.online)).setValue(ServerValue.TIMESTAMP);
                     FirebaseAuth.getInstance().signOut();
                     FriendDB.getInstance(context).dropDB();
                     GroupDB.getInstance(context).dropDB();
-
-                    // Sign out ngắt kết nối với service
-//                                ServiceUtils.stopServiceFriendChat(getContext().getApplicationContext(), true);
 
                     context.startActivity(new Intent(context, LoginActivity.class));
                 });
@@ -86,9 +83,9 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
             if (config.getLabel().equals(StaticConfig.USERNAME_LABEL)) {
                 View viewInflater = LayoutInflater.from(context)
                         .inflate(R.layout.dialog_edit_username, null, false);
-                final EditText input = (EditText) viewInflater.findViewById(R.id.edit_username);
+                final EditText input = viewInflater.findViewById(R.id.edit_username);
                 input.setText(myAccount.name);
-                /*Hiển thị dialog với dEitText cho phép người dùng nhập username mới*/
+
                 new AlertDialog.Builder(context)
                         .setTitle(context.getString(R.string.edit_username))
                         .setView(viewInflater)
@@ -119,7 +116,7 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
         });
     }
 
-    void resetPassword(final String email) {
+    private void resetPassword(final String email) {
         mAuth.sendPasswordResetEmail(email)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
@@ -137,7 +134,7 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
                                 .setTopColorRes(R.color.colorPrimary)
                                 .setIcon(R.drawable.ic_pass_reset)
                                 .setTitle(context.getString(R.string.password_recovery))
-                                .setMessage(context.getString(R.string.email_sent_to)+ email)
+                                .setMessage(context.getString(R.string.email_sent_to) + email)
                                 .setConfirmButtonText(context.getString(R.string.ok))
                                 .show();
                     }
@@ -171,15 +168,14 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        // each data item is just a string in this case
         public TextView label, value;
         public ImageView icon;
 
         public ViewHolder(View view) {
             super(view);
-            label = (TextView) view.findViewById(R.id.tv_title);
-            value = (TextView) view.findViewById(R.id.tv_detail);
-            icon = (ImageView) view.findViewById(R.id.img_icon);
+            label = view.findViewById(R.id.tv_title);
+            value = view.findViewById(R.id.tv_detail);
+            icon = view.findViewById(R.id.img_icon);
         }
     }
 

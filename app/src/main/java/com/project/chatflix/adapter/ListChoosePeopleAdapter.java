@@ -17,7 +17,7 @@ import com.project.chatflix.utils.StaticConfig;
 import java.util.Set;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class ListPeopleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class ListChoosePeopleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private Context context;
     private ListFriend listFriend;
@@ -27,7 +27,7 @@ public class ListPeopleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     private boolean isEdit;
     private Group editGroup;
 
-    public ListPeopleAdapter(Context context, ListFriend listFriend, LinearLayout btnAddGroup, Set<String> listIDChoose, Set<String> listIDRemove, boolean isEdit, Group editGroup) {
+    public ListChoosePeopleAdapter(Context context, ListFriend listFriend, LinearLayout btnAddGroup, Set<String> listIDChoose, Set<String> listIDRemove, boolean isEdit, Group editGroup) {
         this.context = context;
         this.listFriend = listFriend;
         this.btnAddGroup = btnAddGroup;

@@ -182,8 +182,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         switch (item.getItemId()) {
             case CONTEXT_MENU_DELETE:
                 int posGroup = item.getIntent().getIntExtra(CONTEXT_MENU_KEY_INTENT_DATA_POS, -1);
-                if (((String) listGroup.get(posGroup).groupInfo.get(getActivity().getString(R.string.admin))).equals(FirebaseAuth.getInstance()
-                        .getCurrentUser().getUid())) {
+                if ((listGroup.get(posGroup).groupInfo.get(getActivity().getString(R.string.admin))).equals(StaticConfig.UID)) {
                     Group group = listGroup.get(posGroup);
                     listGroup.remove(posGroup);
                     if (group != null) {
@@ -195,8 +194,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                 break;
             case CONTEXT_MENU_EDIT:
                 int posGroup1 = item.getIntent().getIntExtra(CONTEXT_MENU_KEY_INTENT_DATA_POS, -1);
-                if (((String) listGroup.get(posGroup1).groupInfo.get(getActivity().getString(R.string.admin))).equals(FirebaseAuth.getInstance()
-                        .getCurrentUser().getUid())) {
+                if ((listGroup.get(posGroup1).groupInfo.get(getActivity().getString(R.string.admin))).equals(StaticConfig.UID)) {
                     Intent intent = new Intent(getContext(), AddGroupActivity.class);
                     intent.putExtra(getActivity().getString(R.string.group_id), listGroup.get(posGroup1).id);
                     startActivityForResult(intent, REQUEST_EDIT_GROUP);
@@ -208,8 +206,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
             case CONTEXT_MENU_LEAVE:
                 int position = item.getIntent().getIntExtra(CONTEXT_MENU_KEY_INTENT_DATA_POS, -1);
-                if (((String) listGroup.get(position).groupInfo.get(getActivity().getString(R.string.admin))).equals(FirebaseAuth.getInstance()
-                        .getCurrentUser().getUid())) {
+                if ((listGroup.get(position).groupInfo.get(getActivity().getString(R.string.admin))).equals(StaticConfig.UID)) {
                     Toast.makeText(getActivity(), getActivity().getString(R.string.admin_cannot_leave_group), Toast.LENGTH_LONG).show();
                 } else {
                     waitingLeavingGroup.show();
