@@ -126,4 +126,8 @@
     <string name="chat_flix">chatflix</string>
     <string name="status_field">status</string>
     <string name="cannot_add_your_self">Không thể kết bạn với chính mình!</string>
+    <string name="title_fbid_notification_new">Thông báo</string>
+    <string name="body_fbid_notification_new">Bạn có thông báo mới, mở ứng dụng để xem</string>
+    <string name="online_chat_table">OnlineChat</string>
+    <string name="friend_intent">friend_intent</string>
 </resources>

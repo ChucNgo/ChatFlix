@@ -15,11 +15,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.project.chatflix.R;
 import com.project.chatflix.adapter.ListChoosePeopleAdapter;
-import com.project.chatflix.database.FriendDB;
 import com.project.chatflix.database.GroupDB;
+import com.project.chatflix.fragment.ChatFragment;
 import com.project.chatflix.object.Group;
 import com.project.chatflix.object.ListFriend;
 import com.project.chatflix.object.Room;
@@ -43,24 +44,49 @@ public class AddGroupActivity extends AppCompatActivity {
     private LovelyProgressDialog dialogWait;
     private boolean isEditGroup;
     private Group groupEdit;
+    private DatabaseReference mDatabaseRef;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_group);
+        initViews();
+        addEvents();
+    }
+
+    private void initViews() {
+        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
 
         Intent intentData = getIntent();
-        txtActionName = (TextView) findViewById(R.id.txtActionName);
+        txtActionName = findViewById(R.id.txtActionName);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        listFriend = FriendDB.getInstance(this).getListFriend();
+        listFriend = ChatFragment.dataListFriend;
         listIDChoose = new HashSet<>();
         listIDRemove = new HashSet<>();
-//        listIDChoose.add(StaticConfig.UID);
         listIDChoose.add(StaticConfig.UID);
-        btnAddGroup = (LinearLayout) findViewById(R.id.btnAddGroup);
-        editTextGroupName = (EditText) findViewById(R.id.editGroupName);
-        txtGroupIcon = (TextView) findViewById(R.id.icon_group);
+        btnAddGroup = findViewById(R.id.btnAddGroup);
+        editTextGroupName = findViewById(R.id.editGroupName);
+        txtGroupIcon = findViewById(R.id.icon_group);
         dialogWait = new LovelyProgressDialog(this).setCancelable(false);
+
+        if (intentData.getStringExtra(getString(R.string.group_id)) != null) {
+            isEditGroup = true;
+            String idGroup = intentData.getStringExtra(getString(R.string.group_id));
+            txtActionName.setText(getString(R.string.save));
+            btnAddGroup.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+            groupEdit = GroupDB.getInstance(this).getGroup(idGroup);
+            editTextGroupName.setText(groupEdit.groupInfo.get(getString(R.string.name_field)));
+        } else {
+            isEditGroup = false;
+        }
+
+        recyclerListFriend = findViewById(R.id.recycleListFriend);
+        recyclerListFriend.setLayoutManager(linearLayoutManager);
+        adapter = new ListChoosePeopleAdapter(this, listFriend, btnAddGroup, listIDChoose, listIDRemove, isEditGroup, groupEdit);
+        recyclerListFriend.setAdapter(adapter);
+    }
+
+    private void addEvents() {
         editTextGroupName.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -97,24 +123,6 @@ public class AddGroupActivity extends AppCompatActivity {
                 }
             }
         });
-
-        if (intentData.getStringExtra(getString(R.string.group_id)) != null) {
-            isEditGroup = true;
-            String idGroup = intentData.getStringExtra(getString(R.string.group_id));
-            txtActionName.setText(getString(R.string.save));
-            btnAddGroup.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-            groupEdit = GroupDB.getInstance(this).getGroup(idGroup);
-            editTextGroupName.setText(groupEdit.groupInfo.get(getString(R.string.name_field)));
-        } else {
-            isEditGroup = false;
-        }
-
-        recyclerListFriend = (RecyclerView) findViewById(R.id.recycleListFriend);
-        recyclerListFriend.setLayoutManager(linearLayoutManager);
-        adapter = new ListChoosePeopleAdapter(this, listFriend, btnAddGroup, listIDChoose, listIDRemove, isEditGroup, groupEdit);
-        recyclerListFriend.setAdapter(adapter);
-
-
     }
 
     private void editGroup() {
@@ -131,7 +139,7 @@ public class AddGroupActivity extends AppCompatActivity {
         }
         room.groupInfo.put(getString(R.string.name_field), editTextGroupName.getText().toString());
         room.groupInfo.put(getString(R.string.admin), StaticConfig.UID);
-        FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + idGroup).setValue(room)
+        mDatabaseRef.child(getString(R.string.group_table) + "/" + idGroup).setValue(room)
                 .addOnCompleteListener(task -> {
                     addRoomForUser(idGroup, 0);
                 })
@@ -174,7 +182,7 @@ public class AddGroupActivity extends AppCompatActivity {
         }
         room.groupInfo.put(getString(R.string.name_field), editTextGroupName.getText().toString());
         room.groupInfo.put(getString(R.string.admin), StaticConfig.UID);
-        FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + idGroup).setValue(room)
+        mDatabaseRef.child(getString(R.string.group_table) + "/" + idGroup).setValue(room)
                 .addOnCompleteListener(task -> {
                     addRoomForUser(idGroup, 0);
                 });
@@ -187,8 +195,10 @@ public class AddGroupActivity extends AppCompatActivity {
             setResult(RESULT_OK, null);
             AddGroupActivity.this.finish();
         } else {
-            FirebaseDatabase.getInstance().getReference()
-                    .child(getString(R.string.users) + "/" + listIDRemove.toArray()[userIndex] + "/group/" + roomId).removeValue()
+            mDatabaseRef.child(getString(R.string.users) + "/" + listIDRemove.toArray()[userIndex])
+                    .child(getString(R.string.group_field))
+                    .child(roomId)
+                    .removeValue()
                     .addOnCompleteListener(task -> {
                         deleteRoomForUser(roomId, userIndex + 1);
                     })
@@ -230,8 +240,9 @@ public class AddGroupActivity extends AppCompatActivity {
                 deleteRoomForUser(roomId, 0);
             }
         } else {
-            FirebaseDatabase.getInstance().getReference().child(getString(R.string.users) + "/" + listIDChoose.toArray()[userIndex] + "/group/" + roomId)
-                    .setValue(roomId)
+            mDatabaseRef.child(getString(R.string.users) + "/" + listIDChoose.toArray()[userIndex])
+                    .child(getString(R.string.group_field))
+                    .child(roomId).setValue(roomId)
                     .addOnCompleteListener(task -> {
                         addRoomForUser(roomId, userIndex + 1);
                     }).addOnFailureListener(new OnFailureListener() {

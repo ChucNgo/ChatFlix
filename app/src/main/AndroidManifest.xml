@@ -19,12 +19,24 @@
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/logo_1"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/logo_1"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:largeHeap="true">
+
+        <service android:name=".service.MyFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <service android:name=".service.MyFirebaseInstanceIDService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".activity.LoginActivity"
             android:screenOrientation="portrait">
@@ -49,6 +61,9 @@
         <activity
             android:name=".activity.AddGroupActivity"
             android:screenOrientation="portrait" />
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="cff1023429a5af6f3e8a4dbfd095de6a5c3cf362" />
     </application>
 
 </manifest>

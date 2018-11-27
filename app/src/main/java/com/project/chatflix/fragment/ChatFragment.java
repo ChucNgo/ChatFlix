@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,6 +21,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.project.chatflix.MainActivity;
 import com.project.chatflix.R;
 import com.project.chatflix.adapter.ListFriendsAdapter;
 import com.project.chatflix.database.SharedPreferenceHelper;
@@ -40,13 +42,14 @@ public class ChatFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     private RecyclerView recyclerListFrends;
     private ListFriendsAdapter adapter;
     public FragFriendClickFloatButton onClickFloatButton;
-    private ListFriend dataListFriend = null;
+    public static ListFriend dataListFriend = null;
     private ArrayList<String> listFriendID = null;
     private LovelyProgressDialog dialogFindAllFriend;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private DatabaseReference mDatabaseRef;
     private SharedPreferenceHelper prefHelper;
     public static int ACTION_START_CHAT = 1;
+    public static boolean firstLoad = true;
 
     public static final String ACTION_DELETE_FRIEND = "com.project.chatflix.DELETE_FRIEND";
 
@@ -169,6 +172,13 @@ public class ChatFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 adapter.notifyDataSetChanged();
                 dialogFindAllFriend.dismiss();
                 mSwipeRefreshLayout.setRefreshing(false);
+
+                Handler handler = new Handler();
+
+                handler.postDelayed(() -> {
+                    firstLoad = false;
+                }, 2000);
+
             } else {
                 final String id = listFriendID.get(index);
                 mDatabaseRef.child(getString(R.string.users) + "/" + id)

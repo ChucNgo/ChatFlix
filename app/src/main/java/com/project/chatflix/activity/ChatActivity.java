@@ -42,8 +42,10 @@ import com.project.chatflix.R;
 import com.project.chatflix.adapter.ListMessageAdapter;
 import com.project.chatflix.database.SharedPreferenceHelper;
 import com.project.chatflix.object.Conversation;
+import com.project.chatflix.object.Friend;
 import com.project.chatflix.object.GetTimeAgo;
 import com.project.chatflix.object.Message;
+import com.project.chatflix.object.User;
 import com.project.chatflix.utils.StaticConfig;
 
 import java.util.ArrayList;
@@ -88,50 +90,85 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
-        tbChat = findViewById(R.id.toolbarChat);
-        setSupportActionBar(tbChat);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowCustomEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.arrow_left);
-        mImageStorage = FirebaseStorage.getInstance().getReference();
-        Intent intentData = getIntent();
-        idFriend = intentData.getCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID);
-        kindOfChat = intentData.getStringExtra(getString(R.string.kind_of_chat));
-        roomId = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
+        try {
+            mDatabaseRef = FirebaseDatabase.getInstance().getReference();
+            tbChat = findViewById(R.id.toolbarChat);
+            setSupportActionBar(tbChat);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowCustomEnabled(true);
+            getSupportActionBar().setHomeAsUpIndicator(R.drawable.arrow_left);
+            mImageStorage = FirebaseStorage.getInstance().getReference();
+            Intent intentData = getIntent();
+            idFriend = intentData.getCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID);
+            kindOfChat = intentData.getStringExtra(getString(R.string.kind_of_chat));
+            roomId = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
 
-        final String nameFriend = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND);
-        conversation = new Conversation();
-        btnSend = findViewById(R.id.btnSend);
-        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View action_bar_view = inflater.inflate(R.layout.chat_custom_bar, null);
+            final String nameFriend = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND);
+            conversation = new Conversation();
+            btnSend = findViewById(R.id.btnSend);
+            LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View action_bar_view = inflater.inflate(R.layout.chat_custom_bar, null);
 
-        getSupportActionBar().setCustomView(action_bar_view);
+            getSupportActionBar().setCustomView(action_bar_view);
 
-        mTitleView = findViewById(R.id.custom_bar_title);
-        mLastSeenView = findViewById(R.id.custom_bar_seen);
-        mProfileImage = findViewById(R.id.custom_bar_image);
-        btnCall = findViewById(R.id.btnCall);
-        btnVideo = findViewById(R.id.btnVideo);
-        btnAddImage = findViewById(R.id.btnAddImage);
+            mTitleView = findViewById(R.id.custom_bar_title);
+            mLastSeenView = findViewById(R.id.custom_bar_seen);
+            mProfileImage = findViewById(R.id.custom_bar_image);
+            btnCall = findViewById(R.id.btnCall);
+            btnVideo = findViewById(R.id.btnVideo);
+            btnAddImage = findViewById(R.id.btnAddImage);
 
-        editWriteMessage = findViewById(R.id.editWriteMessage);
-        linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        recyclerChat = findViewById(R.id.recyclerChat);
-        recyclerChat.setLayoutManager(linearLayoutManager);
-        adapter = new
-                ListMessageAdapter(this, conversation, bitmapAvataFriend, bitmapAvataUser);
-        recyclerChat.setAdapter(adapter);
+            editWriteMessage = findViewById(R.id.editWriteMessage);
+            linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+            recyclerChat = findViewById(R.id.recyclerChat);
+            recyclerChat.setLayoutManager(linearLayoutManager);
+            adapter = new
+                    ListMessageAdapter(this, conversation, bitmapAvataFriend, bitmapAvataUser);
+            recyclerChat.setAdapter(adapter);
 
-        String base64AvataUser = SharedPreferenceHelper.getInstance(this).getUserInfo().avatar;
-        if (!base64AvataUser.equals(StaticConfig.STR_DEFAULT_BASE64)) {
-            byte[] decodedString = Base64.decode(base64AvataUser, Base64.DEFAULT);
-            bitmapAvataUser = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-        } else {
-            bitmapAvataUser = null;
+            String base64AvataUser = SharedPreferenceHelper.getInstance(this).getUserInfo().avatar;
+            if (!base64AvataUser.equals(StaticConfig.STR_DEFAULT_BASE64)) {
+                byte[] decodedString = Base64.decode(base64AvataUser, Base64.DEFAULT);
+                bitmapAvataUser = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            } else {
+                bitmapAvataUser = null;
+            }
+
+            getListMessage();
+
+            mDatabaseRef.child(getString(R.string.users))
+                    .child(String.valueOf(idFriend.get(0)))
+                    .addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            email_friend = dataSnapshot.child(getString(R.string.email)).getValue().toString();
+                            online = dataSnapshot.child(getString(R.string.online)).getValue().toString();
+                            if (online.equals(getString(R.string.true_field))) {
+                                mLastSeenView.setText(getString(R.string.online_status));
+                            } else {
+                                GetTimeAgo getTimeAgo = new GetTimeAgo();
+                                long lastTime = Long.parseLong(online);
+                                String lastSeenTime = getTimeAgo.getTimeAgo(lastTime, getApplicationContext());
+                                mLastSeenView.setText(lastSeenTime);
+                            }
+                            mTitleView.setText(nameFriend);
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+
+            mDatabaseRef.child(getString(R.string.online_chat_table)).child(StaticConfig.UID).setValue(roomId);
+            mDatabaseRef.child(getString(R.string.online_chat_table)).keepSynced(false);
+        } catch (Exception e) {
+            Log.e(getClass().getSimpleName(), e.toString());
         }
+    }
 
-        if (idFriend != null && nameFriend != null) {
+    private void getListMessage() {
+        if (idFriend != null) {
             if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
                 mDatabaseRef.child(getString(R.string.message_table)).child(roomId)
                         .addChildEventListener(new ChildEventListener() {
@@ -176,6 +213,7 @@ public class ChatActivity extends AppCompatActivity {
                         });
 
             } else {
+                btnCall.setVisibility(View.GONE);
                 mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
                         .addChildEventListener(new ChildEventListener() {
                             @Override
@@ -218,30 +256,6 @@ public class ChatActivity extends AppCompatActivity {
                         });
             }
         }
-
-        mDatabaseRef.child(getString(R.string.users))
-                .child(String.valueOf(idFriend.get(0)))
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        email_friend = dataSnapshot.child(getString(R.string.email)).getValue().toString();
-                        online = dataSnapshot.child(getString(R.string.online)).getValue().toString();
-                        if (online.equals(getString(R.string.true_field))) {
-                            mLastSeenView.setText(getString(R.string.online_status));
-                        } else {
-                            GetTimeAgo getTimeAgo = new GetTimeAgo();
-                            long lastTime = Long.parseLong(online);
-                            String lastSeenTime = getTimeAgo.getTimeAgo(lastTime, getApplicationContext());
-                            mLastSeenView.setText(lastSeenTime);
-                        }
-                        mTitleView.setText(nameFriend);
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
     }
 
     private void addEvents() {
@@ -406,6 +420,7 @@ public class ChatActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         isActive = false;
+        mDatabaseRef.child(getString(R.string.online_chat_table)).child(StaticConfig.UID).removeValue();
     }
 
     @Override

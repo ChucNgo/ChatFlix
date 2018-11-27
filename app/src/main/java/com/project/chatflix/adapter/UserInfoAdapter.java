@@ -22,7 +22,6 @@ import com.google.firebase.database.ServerValue;
 import com.project.chatflix.interfaces.CallBack;
 import com.project.chatflix.R;
 import com.project.chatflix.activity.LoginActivity;
-import com.project.chatflix.database.FriendDB;
 import com.project.chatflix.database.GroupDB;
 import com.project.chatflix.object.Configuration;
 import com.project.chatflix.object.User;
@@ -69,7 +68,7 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
                             .child(StaticConfig.UID)
                             .child(context.getString(R.string.online)).setValue(ServerValue.TIMESTAMP);
                     FirebaseAuth.getInstance().signOut();
-
+                    GroupDB.getInstance(context).dropDB();
                     context.startActivity(new Intent(context, LoginActivity.class));
                 });
                 builder.setNegativeButton(context.getString(R.string.no), (dialogInterface, i) -> {

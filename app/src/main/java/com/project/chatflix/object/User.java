@@ -1,5 +1,10 @@
 package com.project.chatflix.object;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import java.io.Serializable;
+
 public class User {
 
     public String name;
@@ -28,6 +33,13 @@ public class User {
         this.avatar = avatar;
         this.status = status;
         this.message = message;
+    }
+
+    protected User(Parcel in) {
+        name = in.readString();
+        email = in.readString();
+        avatar = in.readString();
+        user_id = in.readString();
     }
 
     public String getName() {
@@ -77,4 +89,5 @@ public class User {
     public void setUser_id(String user_id) {
         this.user_id = user_id;
     }
+
 }

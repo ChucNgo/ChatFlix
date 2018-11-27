@@ -15,11 +15,13 @@ import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.project.chatflix.R;
 import com.project.chatflix.activity.AddGroupActivity;
 import com.project.chatflix.adapter.ListGroupsAdapter;
+import com.project.chatflix.database.GroupDB;
 import com.project.chatflix.mycustom.FragGroupClickFloatButton;
 import com.project.chatflix.object.Group;
 import com.project.chatflix.utils.StaticConfig;
@@ -30,9 +32,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
     private RecyclerView recyclerListGroups;
     public FragGroupClickFloatButton onClickFloatButton;
@@ -46,6 +45,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     public static final String CONTEXT_MENU_KEY_INTENT_DATA_POS = "pos";
 
     LovelyProgressDialog progressDialog, waitingLeavingGroup;
+    private DatabaseReference mDatabaseRef;
 
     public GroupFragment() {
         // Required empty public constructor
@@ -60,7 +60,13 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View layout = inflater.inflate(R.layout.fragment_group, container, false);
+        initViews(layout);
 
+        return layout;
+    }
+
+    private void initViews(View layout) {
+        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
         listGroup = new ArrayList<>();
         recyclerListGroups = layout.findViewById(R.id.recycleListGroup);
         mSwipeRefreshLayout = layout.findViewById(R.id.swipeRefreshLayout);
@@ -84,14 +90,10 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                 .setIcon(R.drawable.ic_dialog_delete_group)
                 .setTitle(getActivity().getString(R.string.group_leaving))
                 .setTopColorRes(R.color.colorAccent);
-
-        return layout;
     }
 
     private void getListGroup() {
-        FirebaseDatabase.getInstance().getReference().child(getActivity().getString(R.string.users) + "/" +
-                StaticConfig.UID
-                + "/" + getActivity().getString(R.string.group_field))
+        mDatabaseRef.child(getActivity().getString(R.string.users) + "/" + StaticConfig.UID + "/" + getActivity().getString(R.string.group_field))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -124,6 +126,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         if (requestCode == REQUEST_EDIT_GROUP && resultCode == Activity.RESULT_OK) {
             listGroup.clear();
             ListGroupsAdapter.listFriend = null;
+            GroupDB.getInstance(getContext()).dropDB();
             getListGroup();
         }
     }
@@ -133,7 +136,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
             adapter.notifyDataSetChanged();
             mSwipeRefreshLayout.setRefreshing(false);
         } else {
-            FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + listGroup.get(indexGroup).id)
+            mDatabaseRef.child(getString(R.string.group_table) + "/" + listGroup.get(indexGroup).id)
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -147,6 +150,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                                 listGroup.get(indexGroup).groupInfo.put(getActivity().getString(R.string.name_field), (String) mapGroupInfo.get(getActivity().getString(R.string.name_field)));
                                 listGroup.get(indexGroup).groupInfo.put(getActivity().getString(R.string.admin), (String) mapGroupInfo.get(getActivity().getString(R.string.admin)));
                             }
+                            GroupDB.getInstance(getContext()).addGroup(listGroup.get(indexGroup));
                             getGroupInfo(indexGroup + 1);
                         }
 
@@ -162,6 +166,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     public void onRefresh() {
         listGroup.clear();
         ListGroupsAdapter.listFriend = null;
+        GroupDB.getInstance(getContext()).dropDB();
         adapter.notifyDataSetChanged();
         getListGroup();
     }
@@ -211,9 +216,10 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     public void deleteGroup(final Group group, final int index) {
         if (index == group.member.size()) {
-            FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + group.id).removeValue()
+            mDatabaseRef.child(getString(R.string.group_table) + "/" + group.id).removeValue()
                     .addOnCompleteListener(task -> {
                         progressDialog.dismiss();
+                        GroupDB.getInstance(getContext()).deleteGroup(group.id);
                         listGroup.remove(group);
                         adapter.notifyDataSetChanged();
                         Toast.makeText(getContext(), getActivity().getString(R.string.group_deleted), Toast.LENGTH_SHORT).show();
@@ -231,7 +237,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                     })
             ;
         } else {
-            FirebaseDatabase.getInstance().getReference()
+            mDatabaseRef
                     .child(getActivity().getString(R.string.users) + "/" + group.member.get(index) + "/" + getString(R.string.group_field) + "/" + group.id)
                     .removeValue()
                     .addOnCompleteListener(task -> {
@@ -254,7 +260,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     }
 
     public void leaveGroup(final Group group) {
-        FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + group.id + "/" + getActivity().getString(R.string.member))
+        mDatabaseRef.child(getString(R.string.group_table) + "/" + group.id + "/" + getActivity().getString(R.string.member))
                 .orderByValue().equalTo(StaticConfig.UID)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -263,6 +269,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                         if (dataSnapshot.getValue() == null) {
                             //email not found
                             waitingLeavingGroup.dismiss();
+                            GroupDB.getInstance(getContext()).deleteGroup(group.id);
                             new LovelyInfoDialog(getContext())
                                     .setTopColorRes(R.color.colorAccent)
                                     .setTitle(getActivity().getString(R.string.error))
@@ -277,10 +284,9 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                                 }
                             }
 
-                            FirebaseDatabase.getInstance().getReference().child(getActivity().getString(R.string.users))
-                                    .child(StaticConfig.UID)
+                            mDatabaseRef.child(getActivity().getString(R.string.users)).child(StaticConfig.UID)
                                     .child(getString(R.string.group_table)).child(group.id).removeValue();
-                            FirebaseDatabase.getInstance().getReference().child(getString(R.string.group_table) + "/" + group.id)
+                            mDatabaseRef.child(getString(R.string.group_table) + "/" + group.id)
                                     .child(getActivity().getString(R.string.member))
                                     .child(memberIndex).removeValue()
                                     .addOnCompleteListener(task -> {

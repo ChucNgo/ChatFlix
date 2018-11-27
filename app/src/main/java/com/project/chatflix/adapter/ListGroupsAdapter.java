@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 import com.project.chatflix.R;
 import com.project.chatflix.activity.ChatActivity;
-import com.project.chatflix.database.FriendDB;
+import com.project.chatflix.fragment.ChatFragment;
 import com.project.chatflix.fragment.GroupFragment;
 import com.project.chatflix.object.Group;
 import com.project.chatflix.object.ListFriend;
@@ -55,10 +55,7 @@ public class ListGroupsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         });
         ((RelativeLayout) ((ItemGroupViewHolder) holder).txtGroupName.getParent())
                 .setOnClickListener(view -> {
-
-                    if (listFriend == null) {
-                        listFriend = FriendDB.getInstance(context).getListFriend();
-                    }
+                    listFriend = ChatFragment.dataListFriend;
 
                     Intent intent = new Intent(context, ChatActivity.class);
                     intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, groupName);
@@ -67,12 +64,12 @@ public class ListGroupsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
                     for (String id : listGroup.get(position).member) {
                         idFriend.add(id);
-                        String avata = listFriend.getAvataById(id);
+                        String avatar = listFriend.getAvataById(id);
 
-                        if (!avata.equals(StaticConfig.STR_DEFAULT_BASE64)) {
-                            byte[] decodedString = Base64.decode(avata, Base64.DEFAULT);
+                        if (!avatar.equals(StaticConfig.STR_DEFAULT_BASE64)) {
+                            byte[] decodedString = Base64.decode(avatar, Base64.DEFAULT);
                             ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
-                        } else if (avata.equals(StaticConfig.STR_DEFAULT_BASE64)) {
+                        } else if (avatar.equals(StaticConfig.STR_DEFAULT_BASE64)) {
                             ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeResource(context.getResources(), R.drawable.default_avatar));
                         } else {
                             ChatActivity.bitmapAvataFriend.put(id, null);
@@ -98,9 +95,9 @@ public class ListGroupsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         public ItemGroupViewHolder(View itemView) {
             super(itemView);
             itemView.setOnCreateContextMenuListener(this);
-            iconGroup = (TextView) itemView.findViewById(R.id.icon_group);
-            txtGroupName = (TextView) itemView.findViewById(R.id.txtName);
-            btnMore = (ImageButton) itemView.findViewById(R.id.btnMoreAction);
+            iconGroup = itemView.findViewById(R.id.icon_group);
+            txtGroupName = itemView.findViewById(R.id.txtName);
+            btnMore = itemView.findViewById(R.id.btnMoreAction);
         }
 
         @Override
