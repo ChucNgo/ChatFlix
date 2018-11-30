@@ -25,4 +25,5 @@ public class StaticConfig {
     public static final String RESETPASS_LABEL = "Change Password";
 
     public static final int PERMISSION_CONSTANT = 1;
+    public static String CLICK_INTENT_FROM_NOTI = "OnClickIntent";
 }

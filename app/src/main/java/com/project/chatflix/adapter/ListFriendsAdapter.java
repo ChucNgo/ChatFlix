@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
@@ -19,14 +18,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.crashlytics.android.Crashlytics;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.project.chatflix.R;
 import com.project.chatflix.activity.ChatActivity;
@@ -38,12 +35,9 @@ import com.project.chatflix.utils.StaticConfig;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
 
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -151,16 +145,16 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                                     holder.txtMessage.setTypeface(Typeface.DEFAULT_BOLD);
                                     holder.txtName.setTypeface(Typeface.DEFAULT_BOLD);
 
-                                    if(!ChatFragment.firstLoad){
+                                    if (!ChatFragment.firstLoad) {
                                         mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID)
                                                 .addListenerForSingleValueEvent(new ValueEventListener() {
                                                     @Override
                                                     public void onDataChange(DataSnapshot dataSnapshot) {
                                                         if (dataSnapshot.getValue() == null) {
-                                                            putNotiMessageFriend(listFriend.getListFriend().get(position), message);
+                                                            putNotiMessageFriend(listFriend.getListFriend().get(position), message, idRoom);
                                                         } else {
                                                             if (!dataSnapshot.getValue().equals(idRoom + "")) {
-                                                                putNotiMessageFriend(listFriend.getListFriend().get(position), message);
+                                                                putNotiMessageFriend(listFriend.getListFriend().get(position), message, idRoom);
                                                             }
                                                         }
                                                     }
@@ -180,6 +174,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                             }
                         } catch (Exception e) {
                             Log.e(getClass().getSimpleName(), e.toString());
+                            Crashlytics.logException(e);
                         }
                     }
 
@@ -206,14 +201,22 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     }
 
-    private void putNotiMessageFriend(Friend friend, Message message) {
+    private void putNotiMessageFriend(Friend friend, Message message, String idRoom) {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context);
 
         //Create the intent that’ll fire when the user taps the notification//
+        Intent intent = new Intent(context, ChatActivity.class);
 
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.androidauthority.com/"));
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, friend.name);
+        intent.putExtra(context.getString(R.string.kind_of_chat), context.getString(R.string.friend_chat));
+        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ID, friend.id);
+        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID, idRoom);
+
+        intent.putExtra(StaticConfig.CLICK_INTENT_FROM_NOTI, true);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         mBuilder.setContentIntent(pendingIntent);
 
@@ -225,7 +228,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        mNotificationManager.notify(001, mBuilder.build());
+        mNotificationManager.notify(context.getString(R.string.app_name), 001, mBuilder.build());
     }
 
     private void addEvents(RecyclerView.ViewHolder holder, int position) {
@@ -243,9 +246,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         Intent intent = new Intent(context, ChatActivity.class);
                         intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, name);
                         intent.putExtra(context.getString(R.string.kind_of_chat), context.getString(R.string.friend_chat));
-                        ArrayList<CharSequence> idFriend = new ArrayList<CharSequence>();
-                        idFriend.add(id);
-                        intent.putCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID, idFriend);
+                        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ID, id);
                         intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID, idRoom);
                         ChatActivity.bitmapAvataFriend = new HashMap<>();
 
@@ -259,7 +260,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID).setValue(idRoom);
                         mDatabaseRef.child(context.getString(R.string.online_chat_table)).keepSynced(false);
                     } catch (Exception e) {
-                        Log.e(getClass().getSimpleName(), e.toString());
+                        Log.e(getClass().getSimpleName(), e.toString()); Crashlytics.logException(e);
                     }
                 });
 
@@ -374,7 +375,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         .show();
             }
         } catch (Exception e) {
-            Log.e(getClass().getSimpleName(), e.toString());
+            Log.e(getClass().getSimpleName(), e.toString()); Crashlytics.logException(e);
         }
     }
 

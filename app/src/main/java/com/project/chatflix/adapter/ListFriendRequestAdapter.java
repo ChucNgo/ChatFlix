@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DataSnapshot;
@@ -78,6 +79,7 @@ public class ListFriendRequestAdapter extends FirebaseRecyclerAdapter<User, List
                     })
                     .addOnFailureListener(e -> {
                         Log.e(getClass().getSimpleName(), e.toString());
+                        Crashlytics.logException(e);
                         Toast.makeText(context, context.getString(R.string.error_occured_please_try_again), Toast.LENGTH_LONG).show();
                     });
 

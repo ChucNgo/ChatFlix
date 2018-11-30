@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -26,6 +27,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.esafirm.imagepicker.features.ImagePicker;
 import com.esafirm.imagepicker.model.Image;
 import com.google.firebase.database.ChildEventListener;
@@ -64,7 +66,7 @@ public class ChatActivity extends AppCompatActivity {
     public static final int VIEW_TYPE_FRIEND_MESSAGE = 1;
     private ListMessageAdapter adapter;
     private String roomId, kindOfChat, current_user_ref, chat_user_ref, email_friend, online;
-    private ArrayList<CharSequence> idFriend;
+    private String idFriend;
     private Conversation conversation;
     private ImageButton btnSend;
     private Button btnAddImage, btnCall, btnVideo;
@@ -98,12 +100,13 @@ public class ChatActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowCustomEnabled(true);
             getSupportActionBar().setHomeAsUpIndicator(R.drawable.arrow_left);
             mImageStorage = FirebaseStorage.getInstance().getReference();
-            Intent intentData = getIntent();
-            idFriend = intentData.getCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID);
-            kindOfChat = intentData.getStringExtra(getString(R.string.kind_of_chat));
-            roomId = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
+            Bundle intentData = getIntent().getExtras();
+            idFriend = intentData.getString(StaticConfig.INTENT_KEY_CHAT_ID);
+            kindOfChat = intentData.getString(getString(R.string.kind_of_chat));
+            roomId = intentData.getString(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
 
-            final String nameFriend = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND);
+            final String nameFriend = intentData.getString(StaticConfig.INTENT_KEY_CHAT_FRIEND);
+
             conversation = new Conversation();
             btnSend = findViewById(R.id.btnSend);
             LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -112,6 +115,7 @@ public class ChatActivity extends AppCompatActivity {
             getSupportActionBar().setCustomView(action_bar_view);
 
             mTitleView = findViewById(R.id.custom_bar_title);
+            mTitleView.setText(nameFriend);
             mLastSeenView = findViewById(R.id.custom_bar_seen);
             mProfileImage = findViewById(R.id.custom_bar_image);
             btnCall = findViewById(R.id.btnCall);
@@ -136,22 +140,82 @@ public class ChatActivity extends AppCompatActivity {
 
             getListMessage();
 
-            mDatabaseRef.child(getString(R.string.users))
-                    .child(String.valueOf(idFriend.get(0)))
-                    .addValueEventListener(new ValueEventListener() {
+            if (idFriend != null) {
+                showLastSeenTime(idFriend);
+            }
+
+            mDatabaseRef.child(getString(R.string.online_chat_table)).child(StaticConfig.UID).setValue(roomId);
+            mDatabaseRef.child(getString(R.string.online_chat_table)).keepSynced(false);
+
+            NotificationManagerCompat.from(this).cancel("ChatFlix", 001);
+        } catch (Exception e) {
+            Log.e(getClass().getSimpleName(), e.toString());
+            Crashlytics.logException(e);
+        }
+    }
+
+    private void showLastSeenTime(String idFriend) {
+        mDatabaseRef.child(getString(R.string.users))
+                .child(String.valueOf(idFriend))
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        email_friend = dataSnapshot.child(getString(R.string.email)).getValue().toString();
+                        online = dataSnapshot.child(getString(R.string.online)).getValue().toString();
+                        if (online.equals(getString(R.string.true_field))) {
+                            mLastSeenView.setText(getString(R.string.online_status));
+                        } else {
+                            GetTimeAgo getTimeAgo = new GetTimeAgo();
+                            long lastTime = Long.parseLong(online);
+                            String lastSeenTime = getTimeAgo.getTimeAgo(lastTime, getApplicationContext());
+                            mLastSeenView.setText(lastSeenTime);
+                        }
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+    }
+
+    private void getListMessage() {
+        if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
+            mDatabaseRef.child(getString(R.string.message_table)).child(roomId)
+                    .addChildEventListener(new ChildEventListener() {
                         @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            email_friend = dataSnapshot.child(getString(R.string.email)).getValue().toString();
-                            online = dataSnapshot.child(getString(R.string.online)).getValue().toString();
-                            if (online.equals(getString(R.string.true_field))) {
-                                mLastSeenView.setText(getString(R.string.online_status));
-                            } else {
-                                GetTimeAgo getTimeAgo = new GetTimeAgo();
-                                long lastTime = Long.parseLong(online);
-                                String lastSeenTime = getTimeAgo.getTimeAgo(lastTime, getApplicationContext());
-                                mLastSeenView.setText(lastSeenTime);
+                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                            if (dataSnapshot.getValue() != null) {
+                                HashMap mapMessage = (HashMap) dataSnapshot.getValue();
+                                Message newMessage = new Message();
+                                newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
+                                newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
+                                newMessage.text = (String) mapMessage.get(getString(R.string.text));
+                                newMessage.timestamp = (long) mapMessage.get(getString(R.string.timestamp));
+                                newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
+                                // Lấy ảnh
+                                newMessage.type = (String) mapMessage.get(getString(R.string.type));
+                                conversation.getListMessageData().add(newMessage);
+
+                                adapter.notifyDataSetChanged();
+                                linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
                             }
-                            mTitleView.setText(nameFriend);
+                        }
+
+                        @Override
+                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                        }
+
+                        @Override
+                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
                         }
 
                         @Override
@@ -160,101 +224,48 @@ public class ChatActivity extends AppCompatActivity {
                         }
                     });
 
-            mDatabaseRef.child(getString(R.string.online_chat_table)).child(StaticConfig.UID).setValue(roomId);
-            mDatabaseRef.child(getString(R.string.online_chat_table)).keepSynced(false);
-        } catch (Exception e) {
-            Log.e(getClass().getSimpleName(), e.toString());
-        }
-    }
+        } else {
+            btnCall.setVisibility(View.GONE);
+            mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
+                    .addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                            if (dataSnapshot.getValue() != null) {
+                                HashMap mapMessage = (HashMap) dataSnapshot.getValue();
+                                Message newMessage = new Message();
+                                newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
+                                newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
+                                newMessage.text = (String) mapMessage.get(getString(R.string.text));
+                                newMessage.timestamp = (long) mapMessage.get(getString(R.string.timestamp));
+                                newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
+                                newMessage.type = (String) mapMessage.get(getString(R.string.type));
 
-    private void getListMessage() {
-        if (idFriend != null) {
-            if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
-                mDatabaseRef.child(getString(R.string.message_table)).child(roomId)
-                        .addChildEventListener(new ChildEventListener() {
-                            @Override
-                            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                                if (dataSnapshot.getValue() != null) {
-                                    HashMap mapMessage = (HashMap) dataSnapshot.getValue();
-                                    Message newMessage = new Message();
-                                    newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
-                                    newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
-                                    newMessage.text = (String) mapMessage.get(getString(R.string.text));
-                                    newMessage.timestamp = (long) mapMessage.get(getString(R.string.timestamp));
-                                    newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
-                                    // Lấy ảnh
-                                    newMessage.type = (String) mapMessage.get(getString(R.string.type));
-                                    conversation.getListMessageData().add(newMessage);
-
-                                    adapter.notifyDataSetChanged();
-                                    linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
-                                }
+                                conversation.getListMessageData().add(newMessage);
+                                adapter.notifyDataSetChanged();
+                                linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
                             }
+                        }
 
-                            @Override
-                            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                        @Override
+                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
 
-                            }
+                        }
 
-                            @Override
-                            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                        @Override
+                        public void onChildRemoved(DataSnapshot dataSnapshot) {
 
-                            }
+                        }
 
-                            @Override
-                            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                        @Override
+                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
 
-                            }
+                        }
 
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                            }
-                        });
-
-            } else {
-                btnCall.setVisibility(View.GONE);
-                mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
-                        .addChildEventListener(new ChildEventListener() {
-                            @Override
-                            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                                if (dataSnapshot.getValue() != null) {
-                                    HashMap mapMessage = (HashMap) dataSnapshot.getValue();
-                                    Message newMessage = new Message();
-                                    newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
-                                    newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
-                                    newMessage.text = (String) mapMessage.get(getString(R.string.text));
-                                    newMessage.timestamp = (long) mapMessage.get(getString(R.string.timestamp));
-                                    newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
-                                    newMessage.type = (String) mapMessage.get(getString(R.string.type));
-
-                                    conversation.getListMessageData().add(newMessage);
-                                    adapter.notifyDataSetChanged();
-                                    linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
-                                }
-                            }
-
-                            @Override
-                            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                            }
-
-                            @Override
-                            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                            }
-
-                            @Override
-                            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                            }
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-
-                            }
-                        });
-            }
+                        }
+                    });
         }
     }
 
@@ -484,6 +495,7 @@ public class ChatActivity extends AppCompatActivity {
                         }
                     } catch (Exception e) {
                         Log.e(getClass().getSimpleName(), e.toString());
+                        Crashlytics.logException(e);
                     }
                 })
                         .addOnFailureListener(e -> {
@@ -492,26 +504,21 @@ public class ChatActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             Log.e(getClass().getSimpleName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            Intent result = new Intent();
-            result.putExtra(getString(R.string.id_friend), idFriend.get(0));
-            setResult(RESULT_OK, result);
-            this.finish();
+            onBackPressed();
         }
         return true;
     }
 
     @Override
     public void onBackPressed() {
-        Intent result = new Intent();
-        result.putExtra(getString(R.string.id_friend), idFriend.get(0));
-        setResult(RESULT_OK, result);
-        this.finish();
+        super.onBackPressed();
     }
 
 }

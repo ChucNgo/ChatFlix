@@ -1,5 +1,6 @@
 package com.project.chatflix.activity;
 
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -49,27 +50,13 @@ public class FriendRequestActivity extends AppCompatActivity {
 
         Query query = mDatabaseRef.child(getString(R.string.request_table))
                 .child(StaticConfig.UID);
-
-//        query.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//
-//                Object a = dataSnapshot.getValue();
-//                String s = "";
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//                String s = "";
-//            }
-//        });
-
         FirebaseRecyclerOptions<User> options = new FirebaseRecyclerOptions.Builder<User>()
                 .setQuery(query, User.class).build();
 
         adapterRequest = new ListFriendRequestAdapter(this, options);
         rvRequest.setAdapter(adapterRequest);
+
+        NotificationManagerCompat.from(this).cancel("ChatFlix", 001);
     }
 
     @Override

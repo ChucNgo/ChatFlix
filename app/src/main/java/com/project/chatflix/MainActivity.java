@@ -1,9 +1,13 @@
 package com.project.chatflix;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -13,15 +17,19 @@ import android.widget.Toast;
 import com.esafirm.imagepicker.features.ImagePicker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
+import com.google.firebase.database.ValueEventListener;
 import com.project.chatflix.activity.FriendRequestActivity;
 import com.project.chatflix.activity.LoginActivity;
 import com.project.chatflix.adapter.SectionsPagerAdapter;
 import com.project.chatflix.fragment.ChatFragment;
 import com.project.chatflix.fragment.GroupFragment;
 import com.project.chatflix.fragment.InfoFragment;
+import com.project.chatflix.object.User;
 import com.project.chatflix.utils.StaticConfig;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     private InfoFragment fragmentInfo;
     private ChatFragment fragmentChat;
     private GroupFragment fragmentGroup;
+    private DatabaseReference mDatabaseRef;
+    private ValueEventListener valueEventListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,11 +80,46 @@ public class MainActivity extends AppCompatActivity {
         floatButton = findViewById(R.id.fab);
 
         setupViewPager(viewPager);
+
+        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() != null) {
-            mUserRef = FirebaseDatabase.getInstance().getReference().child(getString(R.string.users))
+            mUserRef = mDatabaseRef.child(getString(R.string.users))
                     .child(mAuth.getCurrentUser().getUid());
         }
+
+        valueEventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.getChildrenCount() != 0) {
+                    String name = "";
+                    int i = 0;
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        if (i == dataSnapshot.getChildrenCount() - 1) {
+                            User user = snapshot.getValue(User.class);
+                            int count = (int) (dataSnapshot.getChildrenCount() - 1);
+
+                            if (count == 0) {
+                                name = user.name + getString(R.string.sent_you_request);
+                            } else {
+                                name = user.name + getString(R.string.and) + count + getString(R.string.people_sent_request);
+                            }
+                        }else {
+                            i++;
+                        }
+                    }
+                    i = 0;
+                    putNotiFriendRequest(name);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+
+        mDatabaseRef.child(getString(R.string.request_table)).child(StaticConfig.UID).addValueEventListener(valueEventListener);
     }
 
     private void setupViewPager(ViewPager viewPager) {
@@ -145,6 +190,28 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
+    private void putNotiFriendRequest(String name) {
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this);
+
+        //Create the intent that’ll fire when the user taps the notification//
+        Intent intent = new Intent(this, FriendRequestActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        mBuilder.setContentIntent(pendingIntent);
+
+        mBuilder.setSmallIcon(R.drawable.logo_1);
+        mBuilder.setContentTitle(getString(R.string.friend_request));
+        mBuilder.setContentText(name);
+
+        NotificationManager mNotificationManager =
+
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        mNotificationManager.notify(getString(R.string.app_name), 001, mBuilder.build());
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -155,6 +222,8 @@ public class MainActivity extends AppCompatActivity {
         FirebaseDatabase.getInstance().getReference().child(getString(R.string.users))
                 .child(StaticConfig.UID)
                 .child(getString(R.string.online)).setValue(ServerValue.TIMESTAMP);
+        mDatabaseRef.child(getString(R.string.request_table)).child(StaticConfig.UID)
+                .removeEventListener(valueEventListener);
 
     }
 //    @Override

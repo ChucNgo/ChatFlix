@@ -3,6 +3,7 @@ package com.project.chatflix.fragment;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
@@ -43,6 +44,7 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     public static final int CONTEXT_MENU_LEAVE = 3;
     public static final int REQUEST_EDIT_GROUP = 0;
     public static final String CONTEXT_MENU_KEY_INTENT_DATA_POS = "pos";
+    public static boolean firstLoad = true;
 
     LovelyProgressDialog progressDialog, waitingLeavingGroup;
     private DatabaseReference mDatabaseRef;
@@ -125,7 +127,6 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_EDIT_GROUP && resultCode == Activity.RESULT_OK) {
             listGroup.clear();
-            ListGroupsAdapter.listFriend = null;
             GroupDB.getInstance(getContext()).dropDB();
             getListGroup();
         }
@@ -135,6 +136,12 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         if (indexGroup == listGroup.size()) {
             adapter.notifyDataSetChanged();
             mSwipeRefreshLayout.setRefreshing(false);
+            Handler handler = new Handler();
+
+            handler.postDelayed(() -> {
+                firstLoad = false;
+            }, 2000);
+
         } else {
             mDatabaseRef.child(getString(R.string.group_table) + "/" + listGroup.get(indexGroup).id)
                     .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -164,8 +171,8 @@ public class GroupFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     @Override
     public void onRefresh() {
+        firstLoad = true;
         listGroup.clear();
-        ListGroupsAdapter.listFriend = null;
         GroupDB.getInstance(getContext()).dropDB();
         adapter.notifyDataSetChanged();
         getListGroup();

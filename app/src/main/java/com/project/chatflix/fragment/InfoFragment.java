@@ -28,6 +28,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.esafirm.imagepicker.features.ImagePicker;
 import com.esafirm.imagepicker.model.Image;
 import com.google.firebase.auth.FirebaseAuth;
@@ -180,6 +181,7 @@ public class InfoFragment extends Fragment {
             circleAvatar.setImageDrawable(ImageUtils.roundedImage(context, src));
         } catch (Exception e) {
             Log.e(getClass().getSimpleName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 
@@ -247,6 +249,7 @@ public class InfoFragment extends Fragment {
                     });
         } catch (Exception e) {
             Log.e(getClass().getSimpleName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 

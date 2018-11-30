@@ -130,4 +130,8 @@
     <string name="body_fbid_notification_new">Bạn có thông báo mới, mở ứng dụng để xem</string>
     <string name="online_chat_table">OnlineChat</string>
     <string name="friend_intent">friend_intent</string>
+    <string name="sent_to"> sent to </string>
+    <string name="sent_you_request"> sent you a request!</string>
+    <string name="people_sent_request"> people sent you request!</string>
+    <string name="and"> and </string>
 </resources>

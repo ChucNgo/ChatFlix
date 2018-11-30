@@ -1,6 +1,5 @@
 package com.project.chatflix.fragment;
 
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -119,6 +119,7 @@ public class ChatFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
     @Override
     public void onRefresh() {
+        firstLoad = true;
         listFriendID.clear();
         dataListFriend.getListFriend().clear();
         adapter.notifyDataSetChanged();
@@ -206,6 +207,7 @@ public class ChatFragment extends Fragment implements SwipeRefreshLayout.OnRefre
             }
         } catch (Exception e) {
             Log.e(getClass().getSimpleName(), e.toString());
+            Crashlytics.logException(e);
             dialogFindAllFriend.dismiss();
             mSwipeRefreshLayout.setRefreshing(false);
         }
