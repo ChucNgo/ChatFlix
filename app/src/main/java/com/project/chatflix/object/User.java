@@ -24,7 +24,7 @@ public class User {
         message.idReceiver = "0";
         message.idSender = "0";
         message.text = "";
-        message.timestamp = 0;
+        message.timestamp = Long.valueOf(0);
     }
 
     public User(String name, String email, String avatar, Status status, Message message) {

@@ -50,9 +50,19 @@
         <activity
             android:name=".activity.AddGroupActivity"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".activity.Sinch_Calling.CallScreenActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".activity.Sinch_Calling.IncomingCallScreenActivity"
+            android:screenOrientation="portrait" />
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="cff1023429a5af6f3e8a4dbfd095de6a5c3cf362" />
+
+        <service android:name=".service.SinchService" />
     </application>
 
 </manifest>

@@ -2,18 +2,23 @@ package com.project.chatflix;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.esafirm.imagepicker.features.ImagePicker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -25,14 +30,17 @@ import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.project.chatflix.activity.FriendRequestActivity;
 import com.project.chatflix.activity.LoginActivity;
+import com.project.chatflix.activity.Sinch_Calling.BaseActivity;
 import com.project.chatflix.adapter.SectionsPagerAdapter;
 import com.project.chatflix.fragment.ChatFragment;
 import com.project.chatflix.fragment.GroupFragment;
 import com.project.chatflix.fragment.InfoFragment;
 import com.project.chatflix.object.User;
+import com.project.chatflix.service.SinchService;
 import com.project.chatflix.utils.StaticConfig;
+import com.sinch.android.rtc.SinchError;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private Toolbar tb;
     private ViewPager viewPager;
@@ -58,68 +66,73 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        tb = findViewById(R.id.toolbarMain);
-        setSupportActionBar(tb);
-        getSupportActionBar().setTitle("");
-        layoutRequestFriend = findViewById(R.id.layout_request_friend);
+        try {
+            tb = findViewById(R.id.toolbarMain);
+            setSupportActionBar(tb);
+            getSupportActionBar().setTitle("");
+            layoutRequestFriend = findViewById(R.id.layout_request_friend);
 
-        fragmentInfo = new InfoFragment();
-        fragmentChat = new ChatFragment();
-        fragmentGroup = new GroupFragment();
+            fragmentInfo = new InfoFragment();
+            fragmentChat = new ChatFragment();
+            fragmentGroup = new GroupFragment();
 
-        viewPager = findViewById(R.id.viewPagerMain);
-        sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(sectionsPagerAdapter);
+            viewPager = findViewById(R.id.viewPagerMain);
+            sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+            viewPager.setAdapter(sectionsPagerAdapter);
 
-        tabLayout = findViewById(R.id.tabMain);
-        tabLayout.setupWithViewPager(viewPager);
-        tabLayout.animate();
-        tabLayout.setSelectedTabIndicatorColor(getResources().getColor(R.color.off_white));
-        tabLayout.setSelectedTabIndicatorHeight(3);
+            tabLayout = findViewById(R.id.tabMain);
+            tabLayout.setupWithViewPager(viewPager);
+            tabLayout.animate();
+            tabLayout.setSelectedTabIndicatorColor(getResources().getColor(R.color.off_white));
+            tabLayout.setSelectedTabIndicatorHeight(3);
 
-        floatButton = findViewById(R.id.fab);
+            floatButton = findViewById(R.id.fab);
 
-        setupViewPager(viewPager);
+            setupViewPager(viewPager);
 
-        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
-        mAuth = FirebaseAuth.getInstance();
-        if (mAuth.getCurrentUser() != null) {
-            mUserRef = mDatabaseRef.child(getString(R.string.users))
-                    .child(mAuth.getCurrentUser().getUid());
-        }
+            mDatabaseRef = FirebaseDatabase.getInstance().getReference();
+            mAuth = FirebaseAuth.getInstance();
+            if (mAuth.getCurrentUser() != null) {
+                mUserRef = mDatabaseRef.child(getString(R.string.users))
+                        .child(mAuth.getCurrentUser().getUid());
+            }
 
-        valueEventListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getChildrenCount() != 0) {
-                    String name = "";
-                    int i = 0;
-                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                        if (i == dataSnapshot.getChildrenCount() - 1) {
-                            User user = snapshot.getValue(User.class);
-                            int count = (int) (dataSnapshot.getChildrenCount() - 1);
+            valueEventListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.getChildrenCount() != 0) {
+                        String name = "";
+                        int i = 0;
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            if (i == dataSnapshot.getChildrenCount() - 1) {
+                                User user = snapshot.getValue(User.class);
+                                int count = (int) (dataSnapshot.getChildrenCount() - 1);
 
-                            if (count == 0) {
-                                name = user.name + getString(R.string.sent_you_request);
-                            } else {
-                                name = user.name + getString(R.string.and) + count + getString(R.string.people_sent_request);
+                                if (count == 0) {
+                                    name = user.name + getString(R.string.sent_you_request);
+                                } else {
+                                    name = user.name + getString(R.string.and) + count + getString(R.string.people_sent_request);
+                                }
+                            }else {
+                                i++;
                             }
-                        }else {
-                            i++;
                         }
+                        i = 0;
+                        putNotiFriendRequest(name);
                     }
-                    i = 0;
-                    putNotiFriendRequest(name);
                 }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-            }
-        };
+                }
+            };
 
-        mDatabaseRef.child(getString(R.string.request_table)).child(StaticConfig.UID).addValueEventListener(valueEventListener);
+            mDatabaseRef.child(getString(R.string.request_table)).child(StaticConfig.UID).addValueEventListener(valueEventListener);
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
     private void setupViewPager(ViewPager viewPager) {
@@ -175,13 +188,6 @@ public class MainActivity extends AppCompatActivity {
             StaticConfig.UID = currentUser.getUid();
             mUserRef.child(getString(R.string.online)).setValue(getString(R.string.true_field));
         }
-
-//        if (getSinchServiceInterface().isStarted()) {
-//
-//            Toast.makeText(MainActivity.this,"Service's still running!",Toast.LENGTH_SHORT).show();
-//        }
-
-//        Toast.makeText(MainActivity.this,"Stop friend chat service",Toast.LENGTH_SHORT).show();
     }
 
     private void sendToStart() {
@@ -215,24 +221,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-//        if (getSinchServiceInterface() != null) {
-//            getSinchServiceInterface().stopClient();
-//            Toast.makeText(MainActivity.this,"Stop Service Sinch",Toast.LENGTH_SHORT).show();
-//        }
-        FirebaseDatabase.getInstance().getReference().child(getString(R.string.users))
+        if (getSinchServiceInterface() != null) {
+            getSinchServiceInterface().stopClient();
+        }
+        mDatabaseRef.child(getString(R.string.users))
                 .child(StaticConfig.UID)
                 .child(getString(R.string.online)).setValue(ServerValue.TIMESTAMP);
         mDatabaseRef.child(getString(R.string.request_table)).child(StaticConfig.UID)
                 .removeEventListener(valueEventListener);
 
     }
-//    @Override
-//    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-//        if (SinchService.class.getName().equals(componentName.getClassName())) {
-//            mSinchServiceInterface = (SinchService.SinchServiceInterface) iBinder;
-//            onServiceConnected();
-//        }
-//    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -245,5 +243,4 @@ public class MainActivity extends AppCompatActivity {
             fragmentInfo.handleImageUpload(data);
         }
     }
-
 }

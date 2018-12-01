@@ -7,7 +7,7 @@ public class Message {
     public String idReceiver;
     public String text;
     public String type;
-    public long timestamp;
+    public Long timestamp;
     public String durationCall;
 
     public String getType() {

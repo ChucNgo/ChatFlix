@@ -41,6 +41,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.project.chatflix.R;
+import com.project.chatflix.activity.Sinch_Calling.BaseActivity;
+import com.project.chatflix.activity.Sinch_Calling.CallScreenActivity;
 import com.project.chatflix.adapter.ListMessageAdapter;
 import com.project.chatflix.database.SharedPreferenceHelper;
 import com.project.chatflix.object.Conversation;
@@ -48,7 +50,11 @@ import com.project.chatflix.object.Friend;
 import com.project.chatflix.object.GetTimeAgo;
 import com.project.chatflix.object.Message;
 import com.project.chatflix.object.User;
+import com.project.chatflix.service.SinchService;
 import com.project.chatflix.utils.StaticConfig;
+import com.sinch.android.rtc.MissingPermissionException;
+import com.sinch.android.rtc.calling.Call;
+import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,7 +63,7 @@ import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends BaseActivity {
     public static boolean isActive = false;
     Toolbar tbChat;
 
@@ -147,7 +153,7 @@ public class ChatActivity extends AppCompatActivity {
             mDatabaseRef.child(getString(R.string.online_chat_table)).child(StaticConfig.UID).setValue(roomId);
             mDatabaseRef.child(getString(R.string.online_chat_table)).keepSynced(false);
 
-            NotificationManagerCompat.from(this).cancel("ChatFlix", 001);
+            NotificationManagerCompat.from(this).cancel(getString(R.string.app_name), 001);
         } catch (Exception e) {
             Log.e(getClass().getSimpleName(), e.toString());
             Crashlytics.logException(e);
@@ -160,15 +166,20 @@ public class ChatActivity extends AppCompatActivity {
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        email_friend = dataSnapshot.child(getString(R.string.email)).getValue().toString();
-                        online = dataSnapshot.child(getString(R.string.online)).getValue().toString();
-                        if (online.equals(getString(R.string.true_field))) {
-                            mLastSeenView.setText(getString(R.string.online_status));
-                        } else {
-                            GetTimeAgo getTimeAgo = new GetTimeAgo();
-                            long lastTime = Long.parseLong(online);
-                            String lastSeenTime = getTimeAgo.getTimeAgo(lastTime, getApplicationContext());
-                            mLastSeenView.setText(lastSeenTime);
+                        try {
+                            email_friend = dataSnapshot.child(getString(R.string.email)).getValue().toString();
+                            online = dataSnapshot.child(getString(R.string.online)).getValue().toString();
+                            if (online.equals(getString(R.string.true_field))) {
+                                mLastSeenView.setText(getString(R.string.online_status));
+                            } else {
+                                GetTimeAgo getTimeAgo = new GetTimeAgo();
+                                long lastTime = Long.parseLong(online);
+                                String lastSeenTime = getTimeAgo.getTimeAgo(lastTime, getApplicationContext());
+                                mLastSeenView.setText(lastSeenTime);
+                            }
+                        } catch (Exception e) {
+                            Log.e(getClass().getName(), e.toString());
+                            Crashlytics.logException(e);
                         }
 
                     }
@@ -186,20 +197,25 @@ public class ChatActivity extends AppCompatActivity {
                     .addChildEventListener(new ChildEventListener() {
                         @Override
                         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                            if (dataSnapshot.getValue() != null) {
-                                HashMap mapMessage = (HashMap) dataSnapshot.getValue();
-                                Message newMessage = new Message();
-                                newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
-                                newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
-                                newMessage.text = (String) mapMessage.get(getString(R.string.text));
-                                newMessage.timestamp = (long) mapMessage.get(getString(R.string.timestamp));
-                                newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
-                                // Lấy ảnh
-                                newMessage.type = (String) mapMessage.get(getString(R.string.type));
-                                conversation.getListMessageData().add(newMessage);
+                            try {
+                                if (dataSnapshot.getValue() != null) {
+                                    HashMap mapMessage = (HashMap) dataSnapshot.getValue();
+                                    Message newMessage = new Message();
+                                    newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
+                                    newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
+                                    newMessage.text = (String) mapMessage.get(getString(R.string.text));
+                                    newMessage.timestamp = (Long) mapMessage.get(getString(R.string.timestamp));
+                                    newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
+                                    // Lấy ảnh
+                                    newMessage.type = (String) mapMessage.get(getString(R.string.type));
+                                    conversation.getListMessageData().add(newMessage);
 
-                                adapter.notifyDataSetChanged();
-                                linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
+                                    adapter.notifyDataSetChanged();
+                                    linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
+                                }
+                            } catch (Exception e) {
+                                Log.e(getClass().getName(), e.toString());
+                                Crashlytics.logException(e);
                             }
                         }
 
@@ -230,19 +246,24 @@ public class ChatActivity extends AppCompatActivity {
                     .addChildEventListener(new ChildEventListener() {
                         @Override
                         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                            if (dataSnapshot.getValue() != null) {
-                                HashMap mapMessage = (HashMap) dataSnapshot.getValue();
-                                Message newMessage = new Message();
-                                newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
-                                newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
-                                newMessage.text = (String) mapMessage.get(getString(R.string.text));
-                                newMessage.timestamp = (long) mapMessage.get(getString(R.string.timestamp));
-                                newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
-                                newMessage.type = (String) mapMessage.get(getString(R.string.type));
+                            try {
+                                if (dataSnapshot.getValue() != null) {
+                                    HashMap mapMessage = (HashMap) dataSnapshot.getValue();
+                                    Message newMessage = new Message();
+                                    newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
+                                    newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
+                                    newMessage.text = (String) mapMessage.get(getString(R.string.text));
+                                    newMessage.timestamp = (Long) mapMessage.get(getString(R.string.timestamp));
+                                    newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
+                                    newMessage.type = (String) mapMessage.get(getString(R.string.type));
 
-                                conversation.getListMessageData().add(newMessage);
-                                adapter.notifyDataSetChanged();
-                                linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
+                                    conversation.getListMessageData().add(newMessage);
+                                    adapter.notifyDataSetChanged();
+                                    linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
+                                }
+                            } catch (Exception e) {
+                                Log.e(getClass().getName(), e.toString());
+                                Crashlytics.logException(e);
                             }
                         }
 
@@ -271,25 +292,30 @@ public class ChatActivity extends AppCompatActivity {
 
     private void addEvents() {
         btnSend.setOnClickListener(v -> {
-            String content = editWriteMessage.getText().toString().trim();
+            try {
+                String content = editWriteMessage.getText().toString().trim();
 
-            if (content.length() > 0) {
-                editWriteMessage.setText("");
-                Message newMessage = new Message();
-                newMessage.text = content;
-                newMessage.idSender = StaticConfig.UID;
-                newMessage.idReceiver = roomId;
-                newMessage.type = getString(R.string.text);
-                newMessage.timestamp = System.currentTimeMillis();
+                if (content.length() > 0) {
+                    editWriteMessage.setText("");
+                    Message newMessage = new Message();
+                    newMessage.text = content;
+                    newMessage.idSender = StaticConfig.UID;
+                    newMessage.idReceiver = roomId;
+                    newMessage.type = getString(R.string.text);
+                    newMessage.timestamp = System.currentTimeMillis();
 
-                if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
-                    mDatabaseRef.child(getString(R.string.message_table))
-                            .child(roomId)
-                            .push().setValue(newMessage);
-                } else {
-                    mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
-                            .push().setValue(newMessage);
+                    if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
+                        mDatabaseRef.child(getString(R.string.message_table))
+                                .child(roomId)
+                                .push().setValue(newMessage);
+                    } else {
+                        mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
+                                .push().setValue(newMessage);
+                    }
                 }
+            } catch (Exception e) {
+                Log.e(getClass().getName(), e.toString());
+                Crashlytics.logException(e);
             }
         });
 
@@ -298,74 +324,36 @@ public class ChatActivity extends AppCompatActivity {
         });
 
         //Make a phone call
-//        btnCall.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (online.equals("true")){
-//                    try {
-//                        Call call = getSinchServiceInterface().callUser(email_friend);
-//                        String callId = call.getCallId();
-//                        Intent callScreen = new Intent(ChatActivity.this, CallScreenActivity.class);
-//                        callScreen.putExtra(SinchService.CALL_ID, callId);
-//                        callScreen.putExtra("Room",roomId);
-//                        startActivity(callScreen);
-//
-//                    } catch (MissingPermissionException e) {
-//
-//                        ActivityCompat.requestPermissions(ChatActivity.this,
-//                                new String[]{e.getRequiredPermission()}, 0);
-//
-//                    }
-//                }else {
-//
-//                    new LovelyInfoDialog(ChatActivity.this)
-//                            .setTopColorRes(R.color.colorPrimary)
-//                            .setIcon(R.drawable.no_call)
-//                            .setTitle("Message")
-//                            .setMessage("Can't make a call! Your friend is not online")
-//                            .show();
-//
-//                }
-//
-//            }
-//        });
+        btnCall.setOnClickListener(v -> {
+            try {
+                if (online.equals("true")) {
+                    try {
+                        Call call = getSinchServiceInterface().callUser(email_friend);
+                        String callId = call.getCallId();
+                        Intent callScreen = new Intent(ChatActivity.this, CallScreenActivity.class);
+                        callScreen.putExtra(SinchService.CALL_ID, callId);
+                        callScreen.putExtra("Room", roomId);
+                        startActivity(callScreen);
 
-        //Make a video call
-//        btnVideo.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                isVideo = true;
-//
-//                if (online.equals("true")){
-//                    try {
-//                        Call call = getSinchServiceInterface().callUserVideo(email_friend);
-//                        String callId = call.getCallId();
-//
-//                        Intent callScreen = new Intent(ChatActivity.this, VideoSreenActivity.class);
-//                        callScreen.putExtra("Room",roomId);
-//                        callScreen.putExtra(SinchService.CALL_ID, callId);
-//                        startActivity(callScreen);
-//
-//                    } catch (MissingPermissionException e) {
-//
-//                        ActivityCompat.requestPermissions(ChatActivity.this,
-//                                new String[]{e.getRequiredPermission()}, 0);
-//
-//                    }
-//                }else {
-//
-//                    new LovelyInfoDialog(ChatActivity.this)
-//                            .setTopColorRes(R.color.colorPrimary)
-//                            .setIcon(R.drawable.no_call)
-//                            .setTitle("Message")
-//                            .setMessage("Can't make a call! Your friend is not online")
-//                            .show();
-//
-//                }
-//            }
-//        });
+                    } catch (MissingPermissionException e) {
+                        ActivityCompat.requestPermissions(ChatActivity.this,
+                                new String[]{e.getRequiredPermission()}, 0);
+                    }
+                } else {
 
+                    new LovelyInfoDialog(ChatActivity.this)
+                            .setTopColorRes(R.color.colorPrimary)
+                            .setIcon(R.drawable.no_call)
+                            .setTitle("Message")
+                            .setMessage("Can't make a call! Your friend is not online")
+                            .show();
+
+                }
+            } catch (Exception e) {
+                Log.e(getClass().getName(), e.toString());
+                Crashlytics.logException(e);
+            }
+        });
     }
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
