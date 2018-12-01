@@ -146,24 +146,26 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                                     holder.txtName.setTypeface(Typeface.DEFAULT_BOLD);
 
                                     if (!ChatFragment.firstLoad) {
-                                        mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID)
-                                                .addListenerForSingleValueEvent(new ValueEventListener() {
-                                                    @Override
-                                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                                        if (dataSnapshot.getValue() == null) {
-                                                            putNotiMessageFriend(listFriend.getListFriend().get(position), message, idRoom);
-                                                        } else {
-                                                            if (!dataSnapshot.getValue().equals(idRoom + "")) {
+                                        if (message.type.equalsIgnoreCase(context.getString(R.string.text))) {
+                                            mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID)
+                                                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                                                        @Override
+                                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                                            if (dataSnapshot.getValue() == null) {
                                                                 putNotiMessageFriend(listFriend.getListFriend().get(position), message, idRoom);
+                                                            } else {
+                                                                if (!dataSnapshot.getValue().equals(idRoom + "")) {
+                                                                    putNotiMessageFriend(listFriend.getListFriend().get(position), message, idRoom);
+                                                                }
                                                             }
                                                         }
-                                                    }
 
-                                                    @Override
-                                                    public void onCancelled(DatabaseError databaseError) {
+                                                        @Override
+                                                        public void onCancelled(DatabaseError databaseError) {
 
-                                                    }
-                                                });
+                                                        }
+                                                    });
+                                        }
                                     }
 
                                 }
@@ -260,7 +262,8 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID).setValue(idRoom);
                         mDatabaseRef.child(context.getString(R.string.online_chat_table)).keepSynced(false);
                     } catch (Exception e) {
-                        Log.e(getClass().getSimpleName(), e.toString()); Crashlytics.logException(e);
+                        Log.e(getClass().getSimpleName(), e.toString());
+                        Crashlytics.logException(e);
                     }
                 });
 
@@ -375,7 +378,8 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         .show();
             }
         } catch (Exception e) {
-            Log.e(getClass().getSimpleName(), e.toString()); Crashlytics.logException(e);
+            Log.e(getClass().getSimpleName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 

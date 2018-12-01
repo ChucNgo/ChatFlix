@@ -134,4 +134,14 @@
     <string name="sent_you_request"> sent you a request!</string>
     <string name="people_sent_request"> people sent you request!</string>
     <string name="and"> and </string>
+    <string name="room">Room</string>
+    <string name="missed_call">Missed call</string>
+    <string name="incoming_call">Incoming Call....</string>
+    <string name="calling">Calling </string>
+    <string name="cannot_make_call">Can\'t make a call! Your friend is not online</string>
+    <string name="you_may_answer_call">You may now answer the call</string>
+    <string name="permission_audio">This application needs permission to use your microphone to function properly.</string>
+    <string name="is_calling"> is calling ..</string>
+    <string name="was_in_your_list_friend"> was in your list friend!</string>
+    <string name="User">User </string>
 </resources>

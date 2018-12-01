@@ -30,7 +30,6 @@ public class IncomingCallScreenActivity extends BaseActivity {
     private String mCallId, mRoomId;
     private AudioPlayer mAudioPlayer;
 
-    // Firebase
     FirebaseAuth mAuth;
     DatabaseReference mUserRef;
 
@@ -53,7 +52,6 @@ public class IncomingCallScreenActivity extends BaseActivity {
         mAudioPlayer = new AudioPlayer(this);
         mAudioPlayer.playRingtone();
         mCallId = getIntent().getStringExtra(SinchService.CALL_ID);
-
     }
 
     @Override
@@ -62,7 +60,7 @@ public class IncomingCallScreenActivity extends BaseActivity {
         if (call != null) {
             call.addCallListener(new SinchCallListener());
             TextView remoteUser = findViewById(R.id.remoteUser);
-            remoteUser.setText(call.getRemoteUserId() + " is calling ..");
+            remoteUser.setText(call.getRemoteUserId() + getString(R.string.is_calling));
         } else {
             finish();
         }
@@ -77,7 +75,7 @@ public class IncomingCallScreenActivity extends BaseActivity {
                 call.answer();
                 Intent intent = new Intent(this, CallScreenActivity.class);
                 intent.putExtra(SinchService.CALL_ID, mCallId);
-                intent.putExtra("Room", mRoomId);
+                intent.putExtra(getString(R.string.room), mRoomId);
                 startActivity(intent);
             } catch (MissingPermissionException e) {
                 ActivityCompat.requestPermissions(this, new String[]{e.getRequiredPermission()}, 0);
@@ -89,9 +87,9 @@ public class IncomingCallScreenActivity extends BaseActivity {
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "You may now answer the call", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.you_may_answer_call), Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "This application needs permission to use your microphone to function properly.", Toast
+            Toast.makeText(this, getString(R.string.permission_audio), Toast
                     .LENGTH_LONG).show();
         }
     }
@@ -130,7 +128,6 @@ public class IncomingCallScreenActivity extends BaseActivity {
         public void onShouldSendPushNotification(Call call, List<PushPair> pushPairs) {
             // Send a push through your push provider here, e.g. GCM
         }
-
     }
 
     private OnClickListener mClickListener = v -> {

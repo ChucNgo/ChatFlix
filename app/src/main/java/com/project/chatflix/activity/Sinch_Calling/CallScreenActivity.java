@@ -27,8 +27,6 @@ import java.util.TimerTask;
 public class CallScreenActivity extends BaseActivity {
     public static boolean isCalling = false;
     public boolean isEstablishing;
-    //    public boolean quitCall;
-    static final String TAG = CallScreenActivity.class.getSimpleName();
 
     private AudioPlayer mAudioPlayer;
     private Timer mTimer;
@@ -42,7 +40,6 @@ public class CallScreenActivity extends BaseActivity {
     private TextView mCallerName;
 
     private class UpdateCallDurationTask extends TimerTask {
-
         @Override
         public void run() {
             CallScreenActivity.this.runOnUiThread(() -> {
@@ -63,16 +60,13 @@ public class CallScreenActivity extends BaseActivity {
         Button endCallButton = findViewById(R.id.hangupButton);
 
         endCallButton.setOnClickListener(v -> {
-//                quitCall = true;
             endCall();
         });
         mCallStart = System.currentTimeMillis();
         mCallId = getIntent().getStringExtra(SinchService.CALL_ID);
-        mRoomId = getIntent().getStringExtra("Room");
+        mRoomId = getIntent().getStringExtra(getString(R.string.room));
 
         isEstablishing = false;
-//        quitCall = false;
-
     }
 
     @Override
@@ -80,10 +74,9 @@ public class CallScreenActivity extends BaseActivity {
         Call call = getSinchServiceInterface().getCall(mCallId);
         if (call != null) {
             call.addCallListener(new SinchCallListener());
-            mCallerName.setText("Calling " + call.getRemoteUserId() + " ..");
+            mCallerName.setText(getString(R.string.calling) + call.getRemoteUserId() + " ..");
             mCallState.setText(call.getState().toString());
         } else {
-            Log.e(TAG, "Started with invalid callId, aborting.");
             finish();
         }
     }
@@ -135,62 +128,21 @@ public class CallScreenActivity extends BaseActivity {
 
         @Override
         public void onCallEnded(Call call) {
-            CallEndCause cause = call.getDetails().getEndCause();
-            Log.d(TAG, "Call ended. Reason: " + cause.toString());
             mAudioPlayer.stopProgressTone();
             setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
 
-            String endMsg = "Call ended: " + call.getDetails().toString();
-//            Log.e("Call Detail", endMsg);
-//            Toast.makeText(CallScreenActivity.this, endMsg, Toast.LENGTH_LONG).show();
-
-            //Thêm Call Message vào Firebase
-
-//            String current_user_ref = "message/" + mRoomId + "/" +
-//                    String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode());
-//
-//            String chat_user_ref = "message/" +
-//                    String.valueOf(FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode())
-//                    + "/" + mRoomId;
-//
-//            DatabaseReference user_message_push = FirebaseDatabase.getInstance().getReference()
-//                    .child("message")
-//                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-//                    .child(mRoomId)
-//                    .push();
-//
-//            final String push_id = user_message_push.getKey();
-
-//            Map messageUserMap = new HashMap();
-//            messageUserMap.put(current_user_ref + "/" + push_id, messageMap);
-//            messageUserMap.put(chat_user_ref + "/" + push_id, messageMap);
-
-//            FirebaseDatabase.getInstance().getReference()
-//                    .updateChildren(messageUserMap, new DatabaseReference.CompletionListener() {
-//                        @Override
-//                        public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-//
-//                            if(databaseError != null) {
-//
-//                                Log.d("CHAT_LOG", databaseError.getMessage().toString());
-//
-//                            }
-//                        }
-//                    });
-
             isCalling = true;
-
             //Kiểm tra nếu gọi đc mới lưu
             if (isEstablishing) {
 
                 // Lưu thông tin cuộc gọi để gửi lên Firebase
                 Map messageMap = new HashMap();
-                messageMap.put("text", "Incoming Call....");
-                messageMap.put("idSender", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                messageMap.put("idReceiver", mRoomId);
-                messageMap.put("type", "call");
-                messageMap.put("duration", formatTimespan(System.currentTimeMillis() - mCallStart));
-                messageMap.put("timestamp", ServerValue.TIMESTAMP);
+                messageMap.put(getString(R.string.text), getString(R.string.incoming_call));
+                messageMap.put(getString(R.string.id_sender), FirebaseAuth.getInstance().getCurrentUser().getUid());
+                messageMap.put(getString(R.string.id_receiver), mRoomId);
+                messageMap.put(getString(R.string.type), getString(R.string.call_field));
+                messageMap.put(getString(R.string.duration), formatTimespan(System.currentTimeMillis() - mCallStart));
+                messageMap.put(getString(R.string.timestamp), ServerValue.TIMESTAMP);
 
                 FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + mRoomId)
                         .push().setValue(messageMap);
@@ -199,24 +151,22 @@ public class CallScreenActivity extends BaseActivity {
             else {
                 // Lưu thông tin cuộc gọi để gửi lên Firebase
                 Map messageMap = new HashMap();
-                messageMap.put("text", "Missed call");
-                messageMap.put("idSender", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                messageMap.put("idReceiver", mRoomId);
-                messageMap.put("type", "call");
-                messageMap.put("duration", "Missed call");
-                messageMap.put("timestamp", ServerValue.TIMESTAMP);
+                messageMap.put(getString(R.string.text), getString(R.string.missed_call));
+                messageMap.put(getString(R.string.id_sender), FirebaseAuth.getInstance().getCurrentUser().getUid());
+                messageMap.put(getString(R.string.id_receiver), mRoomId);
+                messageMap.put(getString(R.string.type), getString(R.string.call_field));
+                messageMap.put(getString(R.string.duration), getString(R.string.missed_call));
+                messageMap.put(getString(R.string.timestamp), ServerValue.TIMESTAMP);
 
                 FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + mRoomId)
                         .push().setValue(messageMap);
             }
-
             // Kết thúc cuộc gọi
             endCall();
         }
 
         @Override
         public void onCallEstablished(Call call) {
-            Log.d(TAG, "Call established");
             isEstablishing = true;
             mAudioPlayer.stopProgressTone();
             mCallState.setText(call.getState().toString());
@@ -226,7 +176,6 @@ public class CallScreenActivity extends BaseActivity {
 
         @Override
         public void onCallProgressing(Call call) {
-            Log.d(TAG, "Call progressing");
             mAudioPlayer.playProgressTone();
             isEstablishing = false;
         }
@@ -235,6 +184,5 @@ public class CallScreenActivity extends BaseActivity {
         public void onShouldSendPushNotification(Call call, List<PushPair> pushPairs) {
             // Send a push through your push provider here, e.g. GCM
         }
-
     }
 }

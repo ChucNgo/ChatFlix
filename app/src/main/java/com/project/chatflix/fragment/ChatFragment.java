@@ -226,7 +226,7 @@ public class ChatFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                     .setTopColorRes(R.color.colorPrimary)
                     .setIcon(R.drawable.ic_add_friend)
                     .setTitle(getActivity().getString(R.string.friend_title))
-                    .setMessage("User " + userInfo.email + " was in your list friend!")
+                    .setMessage(getString(R.string.User) + userInfo.email + getString(R.string.was_in_your_list_friend))
                     .show();
         } else {
             sendRequest(idFriend, dialogWait);

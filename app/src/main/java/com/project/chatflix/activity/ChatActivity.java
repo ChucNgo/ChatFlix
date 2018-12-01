@@ -326,13 +326,13 @@ public class ChatActivity extends BaseActivity {
         //Make a phone call
         btnCall.setOnClickListener(v -> {
             try {
-                if (online.equals("true")) {
+                if (online.equals(getString(R.string.true_field))) {
                     try {
                         Call call = getSinchServiceInterface().callUser(email_friend);
                         String callId = call.getCallId();
                         Intent callScreen = new Intent(ChatActivity.this, CallScreenActivity.class);
                         callScreen.putExtra(SinchService.CALL_ID, callId);
-                        callScreen.putExtra("Room", roomId);
+                        callScreen.putExtra(getString(R.string.room), roomId);
                         startActivity(callScreen);
 
                     } catch (MissingPermissionException e) {
@@ -344,8 +344,8 @@ public class ChatActivity extends BaseActivity {
                     new LovelyInfoDialog(ChatActivity.this)
                             .setTopColorRes(R.color.colorPrimary)
                             .setIcon(R.drawable.no_call)
-                            .setTitle("Message")
-                            .setMessage("Can't make a call! Your friend is not online")
+                            .setTitle(getString(R.string.message_table))
+                            .setMessage(getString(R.string.cannot_make_call))
                             .show();
 
                 }
