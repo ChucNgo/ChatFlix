@@ -62,6 +62,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation files('libs/sinch-android-rtc-3.8.0-VIDEO-SNAPSHOT.jar')
+    implementation 'com.adityak:browsemyfiles:1.7'
 }
 apply plugin: 'io.fabric'
 apply plugin: 'com.google.gms.google-services'

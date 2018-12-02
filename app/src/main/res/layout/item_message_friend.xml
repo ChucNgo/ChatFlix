@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layout2"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -35,7 +36,8 @@
         android:textColor="@android:color/black"
         android:layout_toRightOf="@id/imageView3"
         android:layout_marginLeft="5dp"
-        android:layout_marginRight="20dp" />
+        android:layout_marginRight="20dp"
+        android:visibility="visible"/>
 
     <ImageView
         android:id="@+id/message_image_layout_friend"
@@ -105,6 +107,44 @@
                 android:textColor="@color/colorPrimaryDark"/>
 
         </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/viewFileFriend"
+        android:layout_width="140dp"
+        android:layout_height="64dp"
+        android:background="@drawable/rounded_corner2"
+        android:layout_toEndOf="@id/imageView3"
+        android:layout_alignLeft="@+id/textContentFriend"
+        android:visibility="gone"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="horizontal"
+        android:layout_toRightOf="@id/imageView3"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp">
+
+        <TextView
+            android:id="@+id/tvFileName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="sfdgsfgsdfgsfdgdsfgsdf"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="9dp"
+            android:textSize="16dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@android:color/black"
+            android:maxLines="2"/>
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/download_file"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="9dp"/>
 
     </LinearLayout>
 

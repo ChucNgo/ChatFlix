@@ -1,6 +1,7 @@
 package com.project.chatflix.activity;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -26,7 +27,7 @@ import java.util.regex.Pattern;
 public class RegisterActivity extends AppCompatActivity {
     private final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
-
+    public static final String MY_PREFERENCES = "MyPrefs";
     TextInputLayout txtName, txtEmail, txtPassword;
     Button btnCreateAcc;
     private FirebaseAuth auth;
@@ -57,6 +58,8 @@ public class RegisterActivity extends AppCompatActivity {
         tb = findViewById(R.id.toolbar);
         setSupportActionBar(tb);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        sharedpreferences = getSharedPreferences(MY_PREFERENCES,
+                Context.MODE_PRIVATE);
     }
 
     private void addEvents() {

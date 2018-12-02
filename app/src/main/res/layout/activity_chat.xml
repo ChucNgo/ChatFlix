@@ -47,13 +47,37 @@
         android:paddingRight="10dp"
         android:background="@drawable/edittext_boder">
 
-        <Button
-            android:id="@+id/btnAddImage"
+        <LinearLayout
             android:layout_width="40dp"
             android:layout_height="match_parent"
-            android:background="@drawable/edittext_boder"
-            android:drawableTop="@drawable/add_image"
-            android:paddingTop="30dp"/>
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnAddImage"
+                android:layout_width="40dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/edittext_boder"
+                android:drawableTop="@drawable/add_image"
+                android:paddingTop="8dp"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:backgroundTint="#8595A7"/>
+
+            <Button
+                android:id="@+id/btnAddFile"
+                android:layout_width="40dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/edittext_boder"
+                android:drawableTop="@drawable/ic_attach_file_24dp"
+                android:paddingTop="8dp"/>
+
+        </LinearLayout>
+
+
 
         <EditText
             android:id="@+id/editWriteMessage"

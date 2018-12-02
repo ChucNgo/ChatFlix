@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -54,63 +56,68 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        final Configuration config = profileConfig.get(position);
-        holder.label.setText(config.getLabel());
-        holder.value.setText(config.getValue());
-        holder.icon.setImageResource(config.getIcon());
-        ((RelativeLayout) holder.label.getParent()).setOnClickListener(view -> {
-            if (config.getLabel().equals(StaticConfig.SIGNOUT_LABEL)) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setTitle(context.getResources().getString(R.string.sign_out_title));
-                builder.setMessage(context.getResources().getString(R.string.sign_out_message));
-                builder.setPositiveButton(context.getString(R.string.yes), (dialogInterface, i) -> {
-                    FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
-                            .child(StaticConfig.UID)
-                            .child(context.getString(R.string.online)).setValue(ServerValue.TIMESTAMP);
-                    FirebaseAuth.getInstance().signOut();
-                    GroupDB.getInstance(context).dropDB();
-                    context.startActivity(new Intent(context, LoginActivity.class));
-                });
-                builder.setNegativeButton(context.getString(R.string.no), (dialogInterface, i) -> {
-                    dialogInterface.dismiss();
-                });
-                builder.create().show();
-            }
+        try {
+            final Configuration config = profileConfig.get(position);
+            holder.label.setText(config.getLabel());
+            holder.value.setText(config.getValue());
+            holder.icon.setImageResource(config.getIcon());
+            ((RelativeLayout) holder.label.getParent()).setOnClickListener(view -> {
+                if (config.getLabel().equals(StaticConfig.SIGNOUT_LABEL)) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle(context.getResources().getString(R.string.sign_out_title));
+                    builder.setMessage(context.getResources().getString(R.string.sign_out_message));
+                    builder.setPositiveButton(context.getString(R.string.yes), (dialogInterface, i) -> {
+                        FirebaseDatabase.getInstance().getReference().child(context.getString(R.string.users))
+                                .child(StaticConfig.UID)
+                                .child(context.getString(R.string.online)).setValue(ServerValue.TIMESTAMP);
+                        FirebaseAuth.getInstance().signOut();
+                        GroupDB.getInstance(context).dropDB();
+                        context.startActivity(new Intent(context, LoginActivity.class));
+                    });
+                    builder.setNegativeButton(context.getString(R.string.no), (dialogInterface, i) -> {
+                        dialogInterface.dismiss();
+                    });
+                    builder.create().show();
+                }
 
-            if (config.getLabel().equals(StaticConfig.USERNAME_LABEL)) {
-                View viewInflater = LayoutInflater.from(context)
-                        .inflate(R.layout.dialog_edit_username, null, false);
-                final EditText input = viewInflater.findViewById(R.id.edit_username);
-                input.setText(myAccount.name);
+                if (config.getLabel().equals(StaticConfig.USERNAME_LABEL)) {
+                    View viewInflater = LayoutInflater.from(context)
+                            .inflate(R.layout.dialog_edit_username, null, false);
+                    final EditText input = viewInflater.findViewById(R.id.edit_username);
+                    input.setText(myAccount.name);
 
-                new AlertDialog.Builder(context)
-                        .setTitle(context.getString(R.string.edit_username))
-                        .setView(viewInflater)
-                        .setPositiveButton(context.getString(R.string.save), (dialogInterface, i) -> {
-                            String newName = input.getText().toString();
-                            if (!myAccount.name.equals(newName)) {
-                                listener.changeUserName(newName);
-                            }
-                            dialogInterface.dismiss();
-                        })
-                        .setNegativeButton(context.getString(R.string.cancel), (dialogInterface, i) -> {
-                            dialogInterface.dismiss();
-                        }).show();
-            }
+                    new AlertDialog.Builder(context)
+                            .setTitle(context.getString(R.string.edit_username))
+                            .setView(viewInflater)
+                            .setPositiveButton(context.getString(R.string.save), (dialogInterface, i) -> {
+                                String newName = input.getText().toString();
+                                if (!myAccount.name.equals(newName)) {
+                                    listener.changeUserName(newName);
+                                }
+                                dialogInterface.dismiss();
+                            })
+                            .setNegativeButton(context.getString(R.string.cancel), (dialogInterface, i) -> {
+                                dialogInterface.dismiss();
+                            }).show();
+                }
 
-            if (config.getLabel().equals(StaticConfig.RESETPASS_LABEL)) {
-                new AlertDialog.Builder(context)
-                        .setTitle(context.getString(R.string.password))
-                        .setMessage(context.getString(R.string.sure_want_to_reset_password))
-                        .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-                            resetPassword(myAccount.email);
-                            dialogInterface.dismiss();
-                        })
-                        .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {
-                            dialogInterface.dismiss();
-                        }).show();
-            }
-        });
+                if (config.getLabel().equals(StaticConfig.RESETPASS_LABEL)) {
+                    new AlertDialog.Builder(context)
+                            .setTitle(context.getString(R.string.password))
+                            .setMessage(context.getString(R.string.sure_want_to_reset_password))
+                            .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
+                                resetPassword(myAccount.email);
+                                dialogInterface.dismiss();
+                            })
+                            .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {
+                                dialogInterface.dismiss();
+                            }).show();
+                }
+            });
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
     private void resetPassword(final String email) {

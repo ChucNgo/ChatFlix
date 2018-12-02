@@ -85,6 +85,7 @@
     <string name="true_field">true</string>
     <string name="online_status">Online</string>
     <string name="message_images">message_images</string>
+    <string name="message_files">message_files</string>
     <string name="image_field">image</string>
     <string name="id_friend">idFriend</string>
     <string name="error">Error</string>
@@ -144,4 +145,6 @@
     <string name="is_calling"> is calling ..</string>
     <string name="was_in_your_list_friend"> was in your list friend!</string>
     <string name="User">User </string>
+    <string name="file_field">file</string>
+    <string name="link">link</string>
 </resources>

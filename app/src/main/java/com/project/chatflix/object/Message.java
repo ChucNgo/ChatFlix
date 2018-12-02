@@ -9,6 +9,7 @@ public class Message {
     public String type;
     public Long timestamp;
     public String durationCall;
+    public String link;
 
     public String getType() {
         return type;

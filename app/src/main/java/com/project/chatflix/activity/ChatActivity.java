@@ -1,18 +1,20 @@
 package com.project.chatflix.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -27,6 +29,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.aditya.filebrowser.Constants;
+import com.aditya.filebrowser.FileChooser;
 import com.crashlytics.android.Crashlytics;
 import com.esafirm.imagepicker.features.ImagePicker;
 import com.esafirm.imagepicker.model.Image;
@@ -46,17 +50,17 @@ import com.project.chatflix.activity.Sinch_Calling.CallScreenActivity;
 import com.project.chatflix.adapter.ListMessageAdapter;
 import com.project.chatflix.database.SharedPreferenceHelper;
 import com.project.chatflix.object.Conversation;
-import com.project.chatflix.object.Friend;
 import com.project.chatflix.object.GetTimeAgo;
 import com.project.chatflix.object.Message;
-import com.project.chatflix.object.User;
 import com.project.chatflix.service.SinchService;
 import com.project.chatflix.utils.StaticConfig;
 import com.sinch.android.rtc.MissingPermissionException;
 import com.sinch.android.rtc.calling.Call;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 
-import java.util.ArrayList;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,18 +72,19 @@ public class ChatActivity extends BaseActivity {
     Toolbar tbChat;
 
     private RecyclerView recyclerChat;
+    private static final int PICK_PDF = 444;
     public static final int VIEW_TYPE_USER_MESSAGE = 0;
     public static final int VIEW_TYPE_FRIEND_MESSAGE = 1;
     private ListMessageAdapter adapter;
-    private String roomId, kindOfChat, current_user_ref, chat_user_ref, email_friend, online;
+    private String roomId, kindOfChat, current_user_ref, email_friend, online;
     private String idFriend;
     private Conversation conversation;
     private ImageButton btnSend;
-    private Button btnAddImage, btnCall, btnVideo;
+    private Button btnAddImage, btnCall, btnFile;
     private EditText editWriteMessage;
     private LinearLayoutManager linearLayoutManager;
     public static HashMap<String, Bitmap> bitmapAvataFriend;
-    public Bitmap bitmapAvataUser;
+    public static Bitmap bitmapAvataUser;
 
     private TextView mTitleView;
     private TextView mLastSeenView;
@@ -111,7 +116,7 @@ public class ChatActivity extends BaseActivity {
             kindOfChat = intentData.getString(getString(R.string.kind_of_chat));
             roomId = intentData.getString(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
 
-            final String nameFriend = intentData.getString(StaticConfig.INTENT_KEY_CHAT_FRIEND);
+            String nameFriend = intentData.getString(StaticConfig.INTENT_KEY_CHAT_FRIEND);
 
             conversation = new Conversation();
             btnSend = findViewById(R.id.btnSend);
@@ -125,7 +130,7 @@ public class ChatActivity extends BaseActivity {
             mLastSeenView = findViewById(R.id.custom_bar_seen);
             mProfileImage = findViewById(R.id.custom_bar_image);
             btnCall = findViewById(R.id.btnCall);
-            btnVideo = findViewById(R.id.btnVideo);
+            btnFile = findViewById(R.id.btnAddFile);
             btnAddImage = findViewById(R.id.btnAddImage);
 
             editWriteMessage = findViewById(R.id.editWriteMessage);
@@ -133,7 +138,7 @@ public class ChatActivity extends BaseActivity {
             recyclerChat = findViewById(R.id.recyclerChat);
             recyclerChat.setLayoutManager(linearLayoutManager);
             adapter = new
-                    ListMessageAdapter(this, conversation, bitmapAvataFriend, bitmapAvataUser);
+                    ListMessageAdapter(this, conversation, bitmapAvataFriend);
             recyclerChat.setAdapter(adapter);
 
             String base64AvataUser = SharedPreferenceHelper.getInstance(this).getUserInfo().avatar;
@@ -192,102 +197,60 @@ public class ChatActivity extends BaseActivity {
     }
 
     private void getListMessage() {
-        if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
-            mDatabaseRef.child(getString(R.string.message_table)).child(roomId)
-                    .addChildEventListener(new ChildEventListener() {
-                        @Override
-                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                            try {
-                                if (dataSnapshot.getValue() != null) {
-                                    HashMap mapMessage = (HashMap) dataSnapshot.getValue();
-                                    Message newMessage = new Message();
-                                    newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
-                                    newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
-                                    newMessage.text = (String) mapMessage.get(getString(R.string.text));
-                                    newMessage.timestamp = (Long) mapMessage.get(getString(R.string.timestamp));
-                                    newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
-                                    // Lấy ảnh
-                                    newMessage.type = (String) mapMessage.get(getString(R.string.type));
-                                    conversation.getListMessageData().add(newMessage);
 
-                                    adapter.notifyDataSetChanged();
-                                    linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
-                                }
-                            } catch (Exception e) {
-                                Log.e(getClass().getName(), e.toString());
-                                Crashlytics.logException(e);
-                            }
-                        }
-
-                        @Override
-                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                        }
-
-                        @Override
-                        public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                        }
-
-                        @Override
-                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-
-        } else {
+        if (kindOfChat.equalsIgnoreCase(getString(R.string.group_chat))) {
             btnCall.setVisibility(View.GONE);
-            mDatabaseRef.child(getString(R.string.message_table) + "/" + roomId)
-                    .addChildEventListener(new ChildEventListener() {
-                        @Override
-                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                            try {
-                                if (dataSnapshot.getValue() != null) {
-                                    HashMap mapMessage = (HashMap) dataSnapshot.getValue();
-                                    Message newMessage = new Message();
-                                    newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
-                                    newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
-                                    newMessage.text = (String) mapMessage.get(getString(R.string.text));
-                                    newMessage.timestamp = (Long) mapMessage.get(getString(R.string.timestamp));
-                                    newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
-                                    newMessage.type = (String) mapMessage.get(getString(R.string.type));
-
-                                    conversation.getListMessageData().add(newMessage);
-                                    adapter.notifyDataSetChanged();
-                                    linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
-                                }
-                            } catch (Exception e) {
-                                Log.e(getClass().getName(), e.toString());
-                                Crashlytics.logException(e);
-                            }
-                        }
-
-                        @Override
-                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                        }
-
-                        @Override
-                        public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                        }
-
-                        @Override
-                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
         }
+
+        mDatabaseRef.child(getString(R.string.message_table)).child(roomId)
+                .addChildEventListener(new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                        try {
+                            if (dataSnapshot.getValue() != null) {
+                                HashMap mapMessage = (HashMap) dataSnapshot.getValue();
+                                Message newMessage = new Message();
+                                newMessage.idSender = (String) mapMessage.get(getString(R.string.id_sender));
+                                newMessage.idReceiver = (String) mapMessage.get(getString(R.string.id_receiver));
+                                newMessage.text = (String) mapMessage.get(getString(R.string.text));
+                                newMessage.timestamp = (Long) mapMessage.get(getString(R.string.timestamp));
+                                newMessage.durationCall = (String) mapMessage.get(getString(R.string.duration));
+                                newMessage.type = (String) mapMessage.get(getString(R.string.type));
+
+                                newMessage.link = mapMessage.get(getString(R.string.link)) != null
+                                        ? (String) mapMessage.get(getString(R.string.link))
+                                        : null;
+
+                                conversation.getListMessageData().add(newMessage);
+                                adapter.notifyDataSetChanged();
+                                linearLayoutManager.scrollToPosition(conversation.getListMessageData().size() - 1);
+                            }
+                        } catch (Exception e) {
+                            Log.e(getClass().getName(), e.toString());
+                            Crashlytics.logException(e);
+                        }
+                    }
+
+                    @Override
+                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                    }
+
+                    @Override
+                    public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                    }
+
+                    @Override
+                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
     }
 
     private void addEvents() {
@@ -353,6 +316,12 @@ public class ChatActivity extends BaseActivity {
                 Log.e(getClass().getName(), e.toString());
                 Crashlytics.logException(e);
             }
+        });
+
+        btnFile.setOnClickListener(v -> {
+            Intent i = new Intent(this, FileChooser.class); //works for all 3 main classes (i.e FileBrowser, FileChooser, FileBrowserWithCustomHandler)
+            i.putExtra(Constants.ALLOWED_FILE_EXTENSIONS, "pdf;txt;doc;docx;xls;xlsx;zip;rar");
+            startActivityForResult(i, PICK_PDF);
         });
     }
 
@@ -429,19 +398,8 @@ public class ChatActivity extends BaseActivity {
             if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
                 List<Image> images = ImagePicker.getImages(data);
                 Uri imageUri = Uri.parse(images.get(0).getPath());
-                if (kindOfChat.equalsIgnoreCase(getString(R.string.friend_chat))) {
 
-                    current_user_ref = getString(R.string.message_table) + "/" + roomId + "/" +
-                            String.valueOf(StaticConfig.UID.hashCode());
-
-                    chat_user_ref = getString(R.string.message_table) + "/" +
-                            String.valueOf(StaticConfig.UID.hashCode())
-                            + "/" + roomId;
-                } else {
-                    current_user_ref = getString(R.string.message_table) + "/" + roomId;
-                    chat_user_ref = getString(R.string.message_table) + "/" + roomId;
-                }
-
+                current_user_ref = getString(R.string.message_table) + "/" + roomId;
 
                 DatabaseReference user_message_push = mDatabaseRef
                         .child(getString(R.string.message_table))
@@ -450,8 +408,6 @@ public class ChatActivity extends BaseActivity {
                         .push();
 
                 final String push_id = user_message_push.getKey();
-
-
                 StorageReference filepath = mImageStorage.child(getString(R.string.message_images)).child(push_id + ".jpg");
 
                 uploadTask = filepath.putFile(imageUri);
@@ -471,7 +427,6 @@ public class ChatActivity extends BaseActivity {
 
                             Map messageUserMap = new HashMap();
                             messageUserMap.put(current_user_ref + "/" + push_id, messageMap);
-                            messageUserMap.put(chat_user_ref + "/" + push_id, messageMap);
 
                             editWriteMessage.setText("");
 
@@ -489,11 +444,87 @@ public class ChatActivity extends BaseActivity {
                         .addOnFailureListener(e -> {
                             String s = "";
                         });
+            } else {
+                if (requestCode == PICK_PDF && resultCode == Activity.RESULT_OK) {
+                    handleFileAndUpload(data);
+                } else {
+                    Toast.makeText(this, "Cannot upload file to server", Toast.LENGTH_SHORT).show();
+                }
             }
         } catch (Exception e) {
             Log.e(getClass().getSimpleName(), e.toString());
             Crashlytics.logException(e);
         }
+    }
+
+    private void handleFileAndUpload(Intent data) {
+        // Get the Uri of the selected file
+        Uri uri = data.getData();
+        String uriString = uri.toString();
+        File myFile = new File(uriString);
+        String path = myFile.getAbsolutePath();
+
+        StorageReference filepath = mImageStorage.child(getString(R.string.message_files)).child(StaticConfig.UID);
+
+        uploadTask = filepath.putFile(uri);
+
+        uploadTask.addOnCompleteListener(task -> {
+
+            try {
+                if (task.isSuccessful()) {
+                    String download_url = String.valueOf(task.getResult().getDownloadUrl());
+                    String displayName = null;
+
+                    if (uriString.startsWith("content://")) {
+                        Cursor cursor = null;
+                        try {
+                            cursor = this.getContentResolver().query(uri, null, null, null, null);
+                            if (cursor != null && cursor.moveToFirst()) {
+                                displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                            }
+                        } finally {
+                            cursor.close();
+                        }
+                    } else if (uriString.startsWith("file://")) {
+                        displayName = myFile.getName();
+                    }
+
+                    current_user_ref = getString(R.string.message_table) + "/" + roomId;
+
+                    DatabaseReference user_message_push = mDatabaseRef
+                            .child(getString(R.string.message_table))
+                            .child(StaticConfig.UID)
+                            .child(roomId)
+                            .push();
+
+                    final String push_id = user_message_push.getKey();
+
+                    Map messageMap = new HashMap();
+                    messageMap.put(getString(R.string.text), displayName);
+                    messageMap.put(getString(R.string.link), download_url);
+                    messageMap.put(getString(R.string.id_sender), StaticConfig.UID);
+                    messageMap.put(getString(R.string.id_receiver), roomId);
+                    messageMap.put(getString(R.string.type), getString(R.string.file_field));
+                    messageMap.put(getString(R.string.timestamp), ServerValue.TIMESTAMP);
+
+                    Map messageUserMap = new HashMap();
+                    messageUserMap.put(current_user_ref + "/" + push_id, messageMap);
+
+                    mDatabaseRef.updateChildren(messageUserMap, (databaseError, databaseReference) -> {
+                        if (databaseError != null) {
+                            Log.e(getClass().getSimpleName(), databaseError.getMessage());
+                        }
+                    });
+
+                }
+            } catch (Exception e) {
+                Log.e(getClass().getSimpleName(), e.toString());
+                Crashlytics.logException(e);
+            }
+        })
+                .addOnFailureListener(e -> {
+                    String s = "";
+                });
     }
 
     @Override

@@ -1,8 +1,10 @@
 package com.project.chatflix.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
 import android.util.Log;
@@ -36,14 +38,14 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private Conversation conversation;
     private HashMap<String, Bitmap> bitmapAvata;
     private HashMap<String, DatabaseReference> bitmapAvataDB;
-    private Bitmap bitmapAvataUser;
+    private DatabaseReference mDatabaseRef;
 
-    public ListMessageAdapter(Context context, Conversation conversation, HashMap<String, Bitmap> bitmapAvata, Bitmap bitmapAvataUser) {
+    public ListMessageAdapter(Context context, Conversation conversation, HashMap<String, Bitmap> bitmapAvata) {
         this.context = context;
         this.conversation = conversation;
         this.bitmapAvata = bitmapAvata;
-        this.bitmapAvataUser = bitmapAvataUser;
         bitmapAvataDB = new HashMap<>();
+        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
     }
 
     @Override
@@ -59,124 +61,165 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder1, int position) {
         try {
-            if (holder instanceof ItemMessageFriendHolder) {
+            if (holder1 instanceof ItemMessageFriendHolder) {
                 Message mess = conversation.getListMessageData().get(position);
+                ItemMessageFriendHolder holder = (ItemMessageFriendHolder) holder1;
 
                 if (mess != null) {
                     String mess_type = mess.type;
                     if (mess_type.equals(context.getString(R.string.image_field))) {
-                        ((ItemMessageFriendHolder) holder).viewCallFriend.setVisibility(View.GONE);
-                        ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.INVISIBLE);
-                        ((ItemMessageFriendHolder) holder).imgFriend.setVisibility(View.VISIBLE);
-                        //                    ((ItemMessageFriendHolder) holder).imgFriend.setVisibility(View.VISIBLE);
-                        Picasso.with(((ItemMessageFriendHolder) holder).avata.getContext())
+                        holder.viewCallFriend.setVisibility(View.GONE);
+                        holder.txtContent.setVisibility(View.GONE);
+                        holder.imgFriend.setVisibility(View.VISIBLE);
+                        holder.viewFileFriend.setVisibility(View.GONE);
+                        Picasso.with(context)
                                 .load(mess.text)
                                 .placeholder(R.drawable.loading).resize(356, 356)
                                 .centerInside()
-                                .into(((ItemMessageFriendHolder) holder).imgFriend);
-
-                        //                    InputStream inputStream = context.getContentResolver().openInputStream(data.getData());
-                        //
-                        //                    Bitmap imgBitmap = BitmapFactory.decodeStream(inputStream);
-                        //                    imgBitmap = ImageUtils.cropToSquare(imgBitmap);
-                        //                    InputStream is = ImageUtils.convertBitmapToInputStream(imgBitmap);
-                        //                    final Bitmap liteImage = ImageUtils.makeImageLite(is,
-                        //                            imgBitmap.getWidth(), imgBitmap.getHeight(),
-                        //                            ImageUtils.AVATAR_WIDTH, ImageUtils.AVATAR_HEIGHT);
-                        //
-                        //                    String imageBase64 = ImageUtils.encodeBase64(liteImage);
+                                .into(holder.imgFriend);
 
                     } else if (mess_type.equals(context.getString(R.string.call_field))) {
-                        ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.GONE);
-                        ((ItemMessageFriendHolder) holder).imgFriend.setVisibility(View.GONE);
-                        ((ItemMessageFriendHolder) holder).viewCallFriend.setVisibility(View.VISIBLE);
-                        ((ItemMessageFriendHolder) holder).txtDurationFriend
+                        holder.txtContent.setVisibility(View.GONE);
+                        holder.imgFriend.setVisibility(View.GONE);
+                        holder.viewCallFriend.setVisibility(View.VISIBLE);
+                        holder.viewFileFriend.setVisibility(View.GONE);
+                        holder.txtDurationFriend
                                 .setText(conversation.getListMessageData().get(position).durationCall);
+                    } else if (mess_type.equals(context.getString(R.string.file_field))) {
+                        holder.txtContent.setVisibility(View.GONE);
+                        holder.imgFriend.setVisibility(View.GONE);
+                        holder.viewCallFriend.setVisibility(View.GONE);
+                        holder.viewFileFriend.setVisibility(View.VISIBLE);
+
+                        holder.txtFileName.setText(mess.text);
+
+                        addEvents(holder);
                     } else {
-                        //                    ((ItemMessageFriendHolder) holder).imgFriend.setVisibility(View.INVISIBLE);
-                        ((ItemMessageFriendHolder) holder).viewCallFriend.setVisibility(View.GONE);
-                        ((ItemMessageFriendHolder) holder).imgFriend.setVisibility(View.GONE);
-                        ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.VISIBLE);
-                        ((ItemMessageFriendHolder) holder).txtContent
+                        holder.viewCallFriend.setVisibility(View.GONE);
+                        holder.imgFriend.setVisibility(View.GONE);
+                        holder.txtContent.setVisibility(View.VISIBLE);
+                        holder.viewFileFriend.setVisibility(View.GONE);
+                        holder.txtContent
                                 .setText(conversation.getListMessageData().get(position).text);
                     }
                 }
 
-                Bitmap currentAvata = bitmapAvata.
-                        get(conversation.getListMessageData().get(position).idSender);
-                if (currentAvata != null) {
-                    ((ItemMessageFriendHolder) holder).avata.setImageBitmap(currentAvata);
-                } else {
-                    final String id = conversation.getListMessageData().get(position).idSender;
-                    if (bitmapAvataDB.get(id) == null) {
-                        bitmapAvataDB.put(id, FirebaseDatabase.getInstance().getReference()
-                                .child(context.getString(R.string.users) + "/" + id + "/" + context.getString(R.string.avatar_field)));
-                        bitmapAvataDB.get(id).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                if (dataSnapshot.getValue() != null) {
-                                    String avataStr = (String) dataSnapshot.getValue();
-                                    if (!avataStr.equals(StaticConfig.STR_DEFAULT_BASE64)) {
-                                        byte[] decodedString = Base64.decode(avataStr, Base64.DEFAULT);
-                                        ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
-                                    } else {
-                                        ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeResource(context.getResources(), R.drawable.default_avatar));
-                                    }
-                                    notifyDataSetChanged();
-                                }
-                            }
+                setAvatarFriend(holder);
 
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-
-                            }
-                        });
-                    }
-                }
-            } else if (holder instanceof ItemMessageUserHolder) {
+            } else if (holder1 instanceof ItemMessageUserHolder) {
 
                 Message mess = conversation.getListMessageData().get(position);
+                ItemMessageUserHolder holder = (ItemMessageUserHolder) holder1;
+
                 if (mess != null) {
                     String mess_type = mess.type;
                     if (mess_type.equals(context.getString(R.string.image_field))) {
-                        ((ItemMessageUserHolder) holder).viewCallUser.setVisibility(View.GONE);
-                        ((ItemMessageUserHolder) holder).txtContent.setVisibility(View.INVISIBLE);
-                        ((ItemMessageUserHolder) holder).imgUser.setVisibility(View.VISIBLE);
-                        Picasso.with(((ItemMessageUserHolder) holder).avata.getContext())
+                        holder.viewCallUser.setVisibility(View.GONE);
+                        holder.txtContent.setVisibility(View.GONE);
+                        holder.imgUser.setVisibility(View.VISIBLE);
+                        holder.viewFileUser.setVisibility(View.GONE);
+                        Picasso.with(context)
                                 .load(mess.text)
                                 .placeholder(R.drawable.loading).resize(356, 356)
                                 .centerInside()
-                                .into(((ItemMessageUserHolder) holder).imgUser);
+                                .into(holder.imgUser);
 
                     } else if (mess_type.equals(context.getString(R.string.call_field))) {
-                        ((ItemMessageUserHolder) holder).txtContent.setVisibility(View.GONE);
-                        ((ItemMessageUserHolder) holder).imgUser.setVisibility(View.GONE);
-                        ((ItemMessageUserHolder) holder).viewCallUser.setVisibility(View.VISIBLE);
-                        ((ItemMessageUserHolder) holder).txtDurationUser
+                        holder.txtContent.setVisibility(View.GONE);
+                        holder.imgUser.setVisibility(View.GONE);
+                        holder.viewCallUser.setVisibility(View.VISIBLE);
+                        holder.viewFileUser.setVisibility(View.GONE);
+                        holder.txtDurationUser
                                 .setText(conversation.getListMessageData().get(position).durationCall);
+                    } else if (mess_type.equals(context.getString(R.string.file_field))) {
+                        holder.txtContent.setVisibility(View.GONE);
+                        holder.imgUser.setVisibility(View.GONE);
+                        holder.viewCallUser.setVisibility(View.GONE);
+                        holder.viewFileUser.setVisibility(View.VISIBLE);
+
+                        holder.txtFileName.setText(mess.text);
                     } else {
-                        ((ItemMessageUserHolder) holder).viewCallUser.setVisibility(View.GONE);
-                        ((ItemMessageUserHolder) holder).imgUser.setVisibility(View.GONE);
-                        ((ItemMessageUserHolder) holder).txtContent.setVisibility(View.VISIBLE);
-                        ((ItemMessageUserHolder) holder).txtContent
+                        holder.viewCallUser.setVisibility(View.GONE);
+                        holder.imgUser.setVisibility(View.GONE);
+                        holder.txtContent.setVisibility(View.VISIBLE);
+                        holder.viewFileUser.setVisibility(View.GONE);
+                        holder.txtContent
                                 .setText(mess.text);
-                        //                    Picasso.with(((ItemMessageUserHolder) holder).avata.getContext())
-                        //                            .load(mess.text)
-                        //                            .placeholder(R.drawable.loading).resize(1,1)
-                        //                            .centerInside()
-                        //                            .into(((ItemMessageUserHolder) holder).imgUser);
                     }
                 }
 
-                if (bitmapAvataUser != null) {
-                    ((ItemMessageUserHolder) holder).avata.setImageBitmap(bitmapAvataUser);
+                if (ChatActivity.bitmapAvataUser != null) {
+                    holder.avata.setImageBitmap(ChatActivity.bitmapAvataUser);
                 }
             }
+
+            addEvents(holder1);
         } catch (Exception e) {
             Log.e(getClass().getName(), e.toString());
             Crashlytics.logException(e);
+        }
+    }
+
+    private void addEvents(RecyclerView.ViewHolder holder1) {
+        int position = holder1.getAdapterPosition();
+        Message message = conversation.getListMessageData().get(position);
+
+        if (message != null) {
+            if (message.type.equalsIgnoreCase(context.getString(R.string.file_field))) {
+                if (holder1 instanceof ItemMessageFriendHolder) {
+                    ItemMessageFriendHolder holder = (ItemMessageFriendHolder) holder1;
+
+                    holder.viewFileFriend.setOnClickListener(v -> {
+                        Intent intentPdf = new Intent(Intent.ACTION_VIEW, Uri.parse(message.link));
+                        context.startActivity(intentPdf);
+                    });
+                } if (holder1 instanceof ItemMessageUserHolder) {
+                    ItemMessageUserHolder holder = (ItemMessageUserHolder) holder1;
+
+                    holder.viewFileUser.setOnClickListener(v -> {
+                        Intent intentPdf = new Intent(Intent.ACTION_VIEW, Uri.parse(message.link));
+                        context.startActivity(intentPdf);
+                    });
+                }
+            }
+        }
+    }
+
+    private void setAvatarFriend(ItemMessageFriendHolder holder) {
+        int position = holder.getAdapterPosition();
+
+        Bitmap currentAvata = bitmapAvata.
+                get(conversation.getListMessageData().get(position).idSender);
+        if (currentAvata != null) {
+            holder.avata.setImageBitmap(currentAvata);
+        } else {
+            final String id = conversation.getListMessageData().get(position).idSender;
+            if (bitmapAvataDB.get(id) == null) {
+                bitmapAvataDB.put(id, mDatabaseRef.child(context.getString(R.string.users))
+                        .child(id).child(context.getString(R.string.avatar_field)));
+                bitmapAvataDB.get(id).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.getValue() != null) {
+                            String avataStr = (String) dataSnapshot.getValue();
+                            if (!avataStr.equals(StaticConfig.STR_DEFAULT_BASE64)) {
+                                byte[] decodedString = Base64.decode(avataStr, Base64.DEFAULT);
+                                ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
+                            } else {
+                                ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeResource(context.getResources(), R.drawable.default_avatar));
+                            }
+                            notifyDataSetChanged();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+            }
         }
     }
 
@@ -193,10 +236,10 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     class ItemMessageUserHolder extends RecyclerView.ViewHolder {
-        public TextView txtContent, txtDurationUser;
+        public TextView txtContent, txtDurationUser, txtFileName;
         public CircleImageView avata;
         public ImageView imgUser;
-        public View viewCallUser;
+        public View viewCallUser, viewFileUser;
 
         public ItemMessageUserHolder(View itemView) {
             super(itemView);
@@ -205,14 +248,16 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             imgUser = itemView.findViewById(R.id.message_image_layout_user);
             txtDurationUser = itemView.findViewById(R.id.txtDurationUser);
             viewCallUser = itemView.findViewById(R.id.viewCallUser);
+            txtFileName = itemView.findViewById(R.id.tvFileName);
+            viewFileUser = itemView.findViewById(R.id.viewFileUser);
         }
     }
 
     class ItemMessageFriendHolder extends RecyclerView.ViewHolder {
-        public TextView txtContent, txtDurationFriend;
+        public TextView txtContent, txtDurationFriend, txtFileName;
         public CircleImageView avata;
         public ImageView imgFriend;
-        public View viewCallFriend;
+        public View viewCallFriend, viewFileFriend;
 
         public ItemMessageFriendHolder(View itemView) {
             super(itemView);
@@ -221,6 +266,8 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             imgFriend = itemView.findViewById(R.id.message_image_layout_friend);
             txtDurationFriend = itemView.findViewById(R.id.txtDurationFriend);
             viewCallFriend = itemView.findViewById(R.id.viewCallFriend);
+            txtFileName = itemView.findViewById(R.id.tvFileName);
+            viewFileFriend = itemView.findViewById(R.id.viewFileFriend);
         }
     }
 }
