@@ -67,8 +67,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:gravity="center_vertical"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:text="ABC"/>
+                        android:textAppearance="?android:attr/textAppearanceMedium"/>
 
                 </LinearLayout>
 
@@ -94,8 +93,7 @@
                     android:ellipsize="end"
                     android:lines="1"
                     android:paddingBottom="10dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:text="xyzzzzz"/>
+                    android:textAppearance="?android:attr/textAppearanceSmall"/>
             </LinearLayout>
 
             </LinearLayout>
