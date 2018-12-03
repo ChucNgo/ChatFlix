@@ -26,6 +26,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -93,6 +95,8 @@ public class ChatActivity extends BaseActivity {
     private StorageReference mImageStorage;
     private UploadTask uploadTask;
     private DatabaseReference mDatabaseRef;
+    private ProgressBar progressBar;
+    private RelativeLayout layout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,6 +108,8 @@ public class ChatActivity extends BaseActivity {
 
     private void initView() {
         try {
+            layout = findViewById(R.id.wrapper_layout);
+            progressBar = findViewById(R.id.progress_bar);
             mDatabaseRef = FirebaseDatabase.getInstance().getReference();
             tbChat = findViewById(R.id.toolbarChat);
             setSupportActionBar(tbChat);
@@ -396,14 +402,14 @@ public class ChatActivity extends BaseActivity {
         super.onActivityResult(requestCode, resultCode, data);
         try {
             if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
+                showProgress(true);
                 List<Image> images = ImagePicker.getImages(data);
-                Uri imageUri = Uri.parse(images.get(0).getPath());
+                Uri imageUri = Uri.fromFile(new File(images.get(0).getPath()));
 
                 current_user_ref = getString(R.string.message_table) + "/" + roomId;
 
                 DatabaseReference user_message_push = mDatabaseRef
                         .child(getString(R.string.message_table))
-                        .child(StaticConfig.UID)
                         .child(roomId)
                         .push();
 
@@ -435,17 +441,21 @@ public class ChatActivity extends BaseActivity {
                                     Log.e(getClass().getSimpleName(), databaseError.getMessage());
                                 }
                             });
+                            showProgress(false);
                         }
                     } catch (Exception e) {
                         Log.e(getClass().getSimpleName(), e.toString());
                         Crashlytics.logException(e);
+                        showProgress(false);
                     }
                 })
                         .addOnFailureListener(e -> {
                             String s = "";
+                            showProgress(false);
                         });
             } else {
                 if (requestCode == PICK_PDF && resultCode == Activity.RESULT_OK) {
+                    showProgress(true);
                     handleFileAndUpload(data);
                 } else {
                     Toast.makeText(this, "Cannot upload file to server", Toast.LENGTH_SHORT).show();
@@ -515,16 +525,28 @@ public class ChatActivity extends BaseActivity {
                             Log.e(getClass().getSimpleName(), databaseError.getMessage());
                         }
                     });
-
+                    showProgress(false);
                 }
             } catch (Exception e) {
                 Log.e(getClass().getSimpleName(), e.toString());
                 Crashlytics.logException(e);
+                showProgress(false);
             }
         })
                 .addOnFailureListener(e -> {
                     String s = "";
+                    showProgress(false);
                 });
+    }
+
+    private void showProgress(boolean kq) {
+        if (kq == true) {
+            progressBar.setVisibility(View.VISIBLE);
+            layout.setAlpha((float) 0.5);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            layout.setAlpha(1);
+        }
     }
 
     @Override

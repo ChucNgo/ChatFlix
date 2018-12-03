@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/bg_moutain_1">
+    android:background="@drawable/bg_moutain_1"
+    android:id="@+id/wrapper_layout">
 
     <include layout="@layout/app_bar_layout_chat_custom"
         android:id="@+id/toolbarChat" />
@@ -108,5 +109,12 @@
         android:scaleType="centerInside"
         android:layout_alignParentRight="true"
         android:src="@drawable/paper_plane_1" />
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_centerInParent="true"
+        android:visibility="gone"/>
 
 </RelativeLayout>

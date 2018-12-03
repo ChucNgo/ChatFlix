@@ -40,7 +40,7 @@ import com.project.chatflix.service.SinchService;
 import com.project.chatflix.utils.StaticConfig;
 import com.sinch.android.rtc.SinchError;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements SinchService.StartFailedListener{
 
     private Toolbar tb;
     private ViewPager viewPager;
@@ -154,16 +154,21 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void onPageSelected(int position) {
-                if (sectionsPagerAdapter.getItem(position) instanceof ChatFragment) {
-                    floatButton.show();
-                    floatButton.setOnClickListener(fragmentChat.onClickFloatButton.getInstance(MainActivity.this));
-                    floatButton.setImageResource(R.drawable.ic_fr);
-                } else if (sectionsPagerAdapter.getItem(position) instanceof GroupFragment) {
-                    floatButton.show();
-                    floatButton.setOnClickListener(fragmentGroup.onClickFloatButton.getInstance(MainActivity.this));
-                    floatButton.setImageResource(R.drawable.ic_gr);
-                } else {
-                    floatButton.hide();
+                try {
+                    if (sectionsPagerAdapter.getItem(position) instanceof ChatFragment) {
+                        floatButton.show();
+                        floatButton.setOnClickListener(fragmentChat.onClickFloatButton.getInstance(MainActivity.this));
+                        floatButton.setImageResource(R.drawable.ic_fr);
+                    } else if (sectionsPagerAdapter.getItem(position) instanceof GroupFragment) {
+                        floatButton.show();
+                        floatButton.setOnClickListener(fragmentGroup.onClickFloatButton.getInstance(MainActivity.this));
+                        floatButton.setImageResource(R.drawable.ic_gr);
+                    } else {
+                        floatButton.hide();
+                    }
+                } catch (Exception e) {
+                    Log.e(getClass().getName(), e.toString());
+                    Crashlytics.logException(e);
                 }
             }
 
@@ -242,5 +247,27 @@ public class MainActivity extends BaseActivity {
             }
             fragmentInfo.handleImageUpload(data);
         }
+    }
+
+    @Override
+    protected void onServiceConnected() {
+        getSinchServiceInterface().setStartListener(this);
+
+        if (!getSinchServiceInterface().isStarted()) {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if(user != null){
+                getSinchServiceInterface().startClient(user.getEmail());
+            }
+        }
+    }
+
+    @Override
+    public void onStartFailed(SinchError error) {
+        Toast.makeText(this, error.toString(), Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onStarted() {
+
     }
 }
