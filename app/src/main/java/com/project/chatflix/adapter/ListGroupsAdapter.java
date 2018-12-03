@@ -205,7 +205,9 @@ public class ListGroupsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         mBuilder.setContentIntent(pendingIntent);
 
         mBuilder.setSmallIcon(R.drawable.logo_1);
-        mBuilder.setContentTitle(friend.name + context.getString(R.string.sent_to) + group.groupInfo.get(context.getString(R.string.name_field)));
+        mBuilder.setContentTitle(friend.name + " " +
+                context.getString(R.string.sent_to) + " " +
+                group.groupInfo.get(context.getString(R.string.name_field)));
         mBuilder.setContentText(message.text);
 
         NotificationManager mNotificationManager =

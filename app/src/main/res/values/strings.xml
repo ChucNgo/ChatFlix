@@ -18,11 +18,11 @@
     <string name="remember_me">Remember me</string>
     <string name="sign_in">Sign In</string>
     <string name="forgot_password">Forgot Password</string>
-    <string name="dont_t_have_an_account">Dont\'t have an account ?</string>
+    <string name="dont_t_have_an_account">Don\'t have an account ?</string>
     <string name="sign_up">Sign up</string>
     <string name="sign_out_title">Sign out</string>
     <string name="sign_out_message">Are you sure you want to log out?</string>
-    <string name="sure_want_to_reset_password">Are you sure want to reset password?</string>
+    <string name="sure_want_to_reset_password">Are you sure you want to reset password?</string>
     <string name="password_recovery">Password Recovery</string>
     <string name="ok">Ok</string>
     <string name="cancel">Cancel</string>
@@ -34,7 +34,7 @@
     <string name="no">No</string>
     <string name="failed">Failed</string>
     <string name="avatar">Avatar</string>
-    <string name="sure_want_to_change_avatar">Are you sure want to change avatar profile?</string>
+    <string name="sure_want_to_change_avatar">Are you sure you want to change profile picture?</string>
     <string name="select_picture">Select Picture</string>
     <string name="error_occured_please_try_again">Error occured. Please try again!</string>
     <string name="avatar_updating">Avatar updating....</string>
@@ -91,7 +91,7 @@
     <string name="error">Error</string>
     <string name="error_delete_friend">Error occurred during deleting friend</string>
     <string name="delete_friend">Delete Friend</string>
-    <string name="are_you_sure_to_delete">Are you sure want to delete </string>
+    <string name="are_you_sure_to_delete">Are you sure you want to delete </string>
     <string name="deleting">Deleting...</string>
     <string name="is_online">isOnline</string>
     <string name="friend_field">friend</string>
@@ -147,4 +147,7 @@
     <string name="User">User </string>
     <string name="file_field">file</string>
     <string name="link">link</string>
+    <string name="a_friend_request">a friend request!</string>
+    <string name="you_have_sent_to">You have sent to</string>
+    <string name="permission_granted">Permission Granted</string>
 </resources>

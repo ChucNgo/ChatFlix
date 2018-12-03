@@ -333,7 +333,7 @@ public class ChatActivity extends BaseActivity {
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, getString(R.string.notify_sinch), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.permission_granted), Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(this, getString(R.string.permission_sinch), Toast
                     .LENGTH_LONG).show();

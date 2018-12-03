@@ -226,11 +226,38 @@ public class ChatFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                     .setTopColorRes(R.color.colorPrimary)
                     .setIcon(R.drawable.ic_add_friend)
                     .setTitle(getActivity().getString(R.string.friend_title))
-                    .setMessage(getString(R.string.User) + userInfo.email + getString(R.string.was_in_your_list_friend))
+                    .setMessage(getString(R.string.User) + " " + userInfo.email + " " + getString(R.string.was_in_your_list_friend))
                     .show();
         } else {
-            sendRequest(idFriend, dialogWait);
+            checkExistRequestSentToFriend(idFriend, userInfo.email, dialogWait);
         }
+    }
+
+    private void checkExistRequestSentToFriend(String idFriend, String emailFriend, LovelyProgressDialog dialogWait) {
+        mDatabaseRef.child(getActivity().getString(R.string.request_table))
+                .child(idFriend).orderByChild(getString(R.string.user_id)).equalTo(StaticConfig.UID)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.getChildrenCount() != 0) {
+                            dialogWait.dismiss();
+                            new LovelyInfoDialog(getActivity())
+                                    .setTopColorRes(R.color.colorPrimary)
+                                    .setIcon(R.drawable.ic_add_friend)
+                                    .setTitle(getActivity().getString(R.string.friend_title))
+                                    .setMessage(getString(R.string.you_have_sent_to) + " " + emailFriend
+                                    + " " + getString(R.string.a_friend_request))
+                                    .show();
+                        } else {
+                            sendRequest(idFriend, dialogWait);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
     }
 
     private void sendRequest(String idFriend, LovelyProgressDialog dialogWait) {
