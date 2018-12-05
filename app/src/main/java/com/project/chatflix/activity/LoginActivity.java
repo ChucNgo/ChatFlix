@@ -58,18 +58,23 @@ public class LoginActivity extends BaseActivity implements SinchService.StartFai
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        initView();
-        addEvent();
-        loadAccount();
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            email = (String) extras.get(getString(R.string.email));
-            password = (String) extras.get(getString(R.string.password_field));
-            txtEmailLogin.setText(email);
-            txtPasswordLogin.setText(password);
+        try {
+            initView();
+            addEvent();
+            loadAccount();
+            Bundle extras = getIntent().getExtras();
+            if (extras != null) {
+                email = (String) extras.get(getString(R.string.email));
+                password = (String) extras.get(getString(R.string.password_field));
+                txtEmailLogin.setText(email);
+                txtPasswordLogin.setText(password);
+            }
+            firstTimeAccess = true;
+            initFirebase();
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
         }
-        firstTimeAccess = true;
-        initFirebase();
     }
 
     @Override
@@ -248,13 +253,18 @@ public class LoginActivity extends BaseActivity implements SinchService.StartFai
     }
 
     private void loadAccount() {
-        sharedpreferences = getSharedPreferences(MY_PREFERENCES,
-                Context.MODE_PRIVATE);
-        if (sharedpreferences.contains(getString(R.string.email))) {
-            txtEmailLogin.setText(sharedpreferences.getString(getString(R.string.email), ""));
-        }
-        if (sharedpreferences.contains(getString(R.string.password_field))) {
-            txtPasswordLogin.setText(sharedpreferences.getString(getString(R.string.password_field), ""));
+        try {
+            sharedpreferences = getSharedPreferences(MY_PREFERENCES,
+                    Context.MODE_PRIVATE);
+            if (sharedpreferences.contains(getString(R.string.email))) {
+                txtEmailLogin.setText(sharedpreferences.getString(getString(R.string.email), ""));
+            }
+            if (sharedpreferences.contains(getString(R.string.password_field))) {
+                txtPasswordLogin.setText(sharedpreferences.getString(getString(R.string.password_field), ""));
+            }
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 
@@ -265,19 +275,27 @@ public class LoginActivity extends BaseActivity implements SinchService.StartFai
 
     private void loginUser(final String email, String password) {
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                progressDialog.dismiss();
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
+            try {
+                if (task.isSuccessful()) {
 
-                if (!getSinchServiceInterface().isStarted()) {
-                    getSinchServiceInterface().startClient(email);
+                    StaticConfig.UID = mAuth.getCurrentUser().getUid();
+
+                    progressDialog.dismiss();
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+
+                    if (!getSinchServiceInterface().isStarted()) {
+                        getSinchServiceInterface().startClient(email);
+                    }
+                } else {
+                    progressDialog.hide();
+                    Toast.makeText(LoginActivity.this, getString(R.string.email_password_invalid), Toast.LENGTH_LONG).show();
                 }
-            } else {
-                progressDialog.hide();
-                Toast.makeText(LoginActivity.this, getString(R.string.email_password_invalid), Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                Log.e(getClass().getName(), e.toString());
+                Crashlytics.logException(e);
             }
         });
     }

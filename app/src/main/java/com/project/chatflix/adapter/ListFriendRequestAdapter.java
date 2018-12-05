@@ -55,88 +55,98 @@ public class ListFriendRequestAdapter extends FirebaseRecyclerAdapter<User, List
     @Override
     protected void onBindViewHolder(@NonNull ItemViewHolder holder, int position, @NonNull User model) {
 
-        holder.tvDisplayName.setText(model.getName());
+        try {
+            holder.tvDisplayName.setText(model.getName());
 
-        if (!TextUtils.isEmpty(model.getAvatar())) {
-            if (!model.getAvatar().equalsIgnoreCase(context.getString(R.string.default_field))) {
-                byte[] decodedString = Base64.decode(model.getAvatar(), Base64.DEFAULT);
-                Bitmap src = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                holder.imgAvatar.setImageBitmap(src);
+            if (!TextUtils.isEmpty(model.getAvatar())) {
+                if (!model.getAvatar().equalsIgnoreCase(context.getString(R.string.default_field))) {
+                    byte[] decodedString = Base64.decode(model.getAvatar(), Base64.DEFAULT);
+                    Bitmap src = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                    holder.imgAvatar.setImageBitmap(src);
+                } else {
+                    holder.imgAvatar.setImageDrawable(context.getDrawable(R.drawable.ic_notify_group));
+                }
             } else {
                 holder.imgAvatar.setImageDrawable(context.getDrawable(R.drawable.ic_notify_group));
             }
-        } else {
-            holder.imgAvatar.setImageDrawable(context.getDrawable(R.drawable.ic_notify_group));
+
+            holder.btnRemove.setOnClickListener(v -> {
+
+                String key = getRef(position).getKey();
+                mDatabaseRef.child(context.getString(R.string.request_table)).child(StaticConfig.UID)
+                        .child(key).removeValue()
+                        .addOnCompleteListener(task -> {
+                            Toast.makeText(context, context.getString(R.string.delete_request_successfully), Toast.LENGTH_LONG).show();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e(getClass().getSimpleName(), e.toString());
+                            Crashlytics.logException(e);
+                            Toast.makeText(context, context.getString(R.string.error_occured_please_try_again), Toast.LENGTH_LONG).show();
+                        });
+
+            });
+
+            holder.btnAccept.setOnClickListener(v -> {
+                addFriend(model.getUser_id(), true, holder.getAdapterPosition());
+            });
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
         }
-
-        holder.btnRemove.setOnClickListener(v -> {
-
-            String key = getRef(position).getKey();
-            mDatabaseRef.child(context.getString(R.string.request_table)).child(StaticConfig.UID)
-                    .child(key).removeValue()
-                    .addOnCompleteListener(task -> {
-                        Toast.makeText(context, context.getString(R.string.delete_request_successfully), Toast.LENGTH_LONG).show();
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(getClass().getSimpleName(), e.toString());
-                        Crashlytics.logException(e);
-                        Toast.makeText(context, context.getString(R.string.error_occured_please_try_again), Toast.LENGTH_LONG).show();
-                    });
-
-        });
-
-        holder.btnAccept.setOnClickListener(v -> {
-            addFriend(model.getUser_id(), true, holder.getAdapterPosition());
-        });
 
     }
 
     private void addFriend(final String idFriend, boolean isIdFriend, int position) {
-        if (!TextUtils.isEmpty(idFriend)) {
-            if (isIdFriend) {
-                mDatabaseRef.child(context.getString(R.string.users))
-                        .child(StaticConfig.UID)
-                        .child(context.getString(R.string.friend_field)).push().setValue(idFriend)
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                addFriend(idFriend, false, position);
-                            }
-                        })
-                        .addOnFailureListener(e -> {
-                            new LovelyInfoDialog(context)
-                                    .setTopColorRes(R.color.colorAccent)
-                                    .setIcon(R.drawable.ic_add_friend)
-                                    .setTitle(context.getString(R.string.failed))
-                                    .setMessage(context.getString(R.string.add_friend_failed))
-                                    .show();
-                        });
+        try {
+            if (!TextUtils.isEmpty(idFriend)) {
+                if (isIdFriend) {
+                    mDatabaseRef.child(context.getString(R.string.users))
+                            .child(StaticConfig.UID)
+                            .child(context.getString(R.string.friend_field)).push().setValue(idFriend)
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    addFriend(idFriend, false, position);
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                new LovelyInfoDialog(context)
+                                        .setTopColorRes(R.color.colorAccent)
+                                        .setIcon(R.drawable.ic_add_friend)
+                                        .setTitle(context.getString(R.string.failed))
+                                        .setMessage(context.getString(R.string.add_friend_failed))
+                                        .show();
+                            });
+                } else {
+                    mDatabaseRef.child(context.getString(R.string.users)).child(idFriend)
+                            .child(context.getString(R.string.friend_field)).push().setValue(StaticConfig.UID)
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    addFriend(null, false, position);
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                new LovelyInfoDialog(context)
+                                        .setTopColorRes(R.color.colorAccent)
+                                        .setIcon(R.drawable.ic_add_friend)
+                                        .setTitle(context.getString(R.string.failed))
+                                        .setMessage(context.getString(R.string.add_friend_failed))
+                                        .show();
+                            });
+                }
             } else {
-                mDatabaseRef.child(context.getString(R.string.users)).child(idFriend)
-                        .child(context.getString(R.string.friend_field)).push().setValue(StaticConfig.UID)
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                addFriend(null, false, position);
-                            }
-                        })
-                        .addOnFailureListener(e -> {
-                            new LovelyInfoDialog(context)
-                                    .setTopColorRes(R.color.colorAccent)
-                                    .setIcon(R.drawable.ic_add_friend)
-                                    .setTitle(context.getString(R.string.failed))
-                                    .setMessage(context.getString(R.string.add_friend_failed))
-                                    .show();
-                        });
+                String key = getRef(position).getKey();
+                mDatabaseRef.child(context.getString(R.string.request_table)).child(StaticConfig.UID)
+                        .child(key).removeValue();
+                new LovelyInfoDialog(context)
+                        .setTopColorRes(R.color.colorPrimary)
+                        .setIcon(R.drawable.ic_add_friend)
+                        .setTitle(context.getString(R.string.success))
+                        .setMessage(context.getString(R.string.add_friend_success))
+                        .show();
             }
-        } else {
-            String key = getRef(position).getKey();
-            mDatabaseRef.child(context.getString(R.string.request_table)).child(StaticConfig.UID)
-                    .child(key).removeValue();
-            new LovelyInfoDialog(context)
-                    .setTopColorRes(R.color.colorPrimary)
-                    .setIcon(R.drawable.ic_add_friend)
-                    .setTitle(context.getString(R.string.success))
-                    .setMessage(context.getString(R.string.add_friend_success))
-                    .show();
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 

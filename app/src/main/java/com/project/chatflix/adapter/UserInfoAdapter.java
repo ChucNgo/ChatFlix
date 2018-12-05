@@ -121,49 +121,54 @@ public class UserInfoAdapter extends RecyclerView.Adapter<UserInfoAdapter.ViewHo
     }
 
     private void resetPassword(final String email) {
-        mAuth.sendPasswordResetEmail(email)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        new LovelyInfoDialog(context) {
-                            @Override
-                            public LovelyInfoDialog setConfirmButtonText(String text) {
-                                findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm)
-                                        .setOnClickListener(view -> {
-                                            dismiss();
-                                        });
-                                return super.setConfirmButtonText(text);
+        try {
+            mAuth.sendPasswordResetEmail(email)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            new LovelyInfoDialog(context) {
+                                @Override
+                                public LovelyInfoDialog setConfirmButtonText(String text) {
+                                    findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm)
+                                            .setOnClickListener(view -> {
+                                                dismiss();
+                                            });
+                                    return super.setConfirmButtonText(text);
+                                }
                             }
+                                    .setTopColorRes(R.color.colorPrimary)
+                                    .setIcon(R.drawable.ic_pass_reset)
+                                    .setTitle(context.getString(R.string.password_recovery))
+                                    .setMessage(context.getString(R.string.email_sent_to) + email)
+                                    .setConfirmButtonText(context.getString(R.string.ok))
+                                    .show();
                         }
-                                .setTopColorRes(R.color.colorPrimary)
-                                .setIcon(R.drawable.ic_pass_reset)
-                                .setTitle(context.getString(R.string.password_recovery))
-                                .setMessage(context.getString(R.string.email_sent_to) + email)
-                                .setConfirmButtonText(context.getString(R.string.ok))
-                                .show();
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        new LovelyInfoDialog(context) {
-                            @Override
-                            public LovelyInfoDialog setConfirmButtonText(String text) {
-                                findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm)
-                                        .setOnClickListener(view -> {
-                                            dismiss();
-                                        });
-                                return super.setConfirmButtonText(text);
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            new LovelyInfoDialog(context) {
+                                @Override
+                                public LovelyInfoDialog setConfirmButtonText(String text) {
+                                    findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm)
+                                            .setOnClickListener(view -> {
+                                                dismiss();
+                                            });
+                                    return super.setConfirmButtonText(text);
+                                }
                             }
+                                    .setTopColorRes(R.color.colorAccent)
+                                    .setIcon(R.drawable.ic_pass_reset)
+                                    .setTitle(context.getString(R.string.failed))
+                                    .setMessage(context.getString(R.string.cannot_send_email_to) + email)
+                                    .setConfirmButtonText(context.getString(R.string.ok))
+                                    .show();
                         }
-                                .setTopColorRes(R.color.colorAccent)
-                                .setIcon(R.drawable.ic_pass_reset)
-                                .setTitle(context.getString(R.string.failed))
-                                .setMessage(context.getString(R.string.cannot_send_email_to) + email)
-                                .setConfirmButtonText(context.getString(R.string.ok))
-                                .show();
-                    }
-                });
+                    });
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
     @Override

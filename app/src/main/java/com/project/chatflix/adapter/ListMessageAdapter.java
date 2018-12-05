@@ -163,63 +163,78 @@ public class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     private void addEvents(RecyclerView.ViewHolder holder1) {
-        int position = holder1.getAdapterPosition();
-        Message message = conversation.getListMessageData().get(position);
+        try {
+            int position = holder1.getAdapterPosition();
+            Message message = conversation.getListMessageData().get(position);
 
-        if (message != null) {
-            if (message.type.equalsIgnoreCase(context.getString(R.string.file_field))) {
-                if (holder1 instanceof ItemMessageFriendHolder) {
-                    ItemMessageFriendHolder holder = (ItemMessageFriendHolder) holder1;
+            if (message != null) {
+                if (message.type.equalsIgnoreCase(context.getString(R.string.file_field))) {
+                    if (holder1 instanceof ItemMessageFriendHolder) {
+                        ItemMessageFriendHolder holder = (ItemMessageFriendHolder) holder1;
 
-                    holder.viewFileFriend.setOnClickListener(v -> {
-                        Intent intentPdf = new Intent(Intent.ACTION_VIEW, Uri.parse(message.link));
-                        context.startActivity(intentPdf);
-                    });
-                } if (holder1 instanceof ItemMessageUserHolder) {
-                    ItemMessageUserHolder holder = (ItemMessageUserHolder) holder1;
+                        holder.viewFileFriend.setOnClickListener(v -> {
+                            Intent intentPdf = new Intent(Intent.ACTION_VIEW, Uri.parse(message.link));
+                            context.startActivity(intentPdf);
+                        });
+                    } if (holder1 instanceof ItemMessageUserHolder) {
+                        ItemMessageUserHolder holder = (ItemMessageUserHolder) holder1;
 
-                    holder.viewFileUser.setOnClickListener(v -> {
-                        Intent intentPdf = new Intent(Intent.ACTION_VIEW, Uri.parse(message.link));
-                        context.startActivity(intentPdf);
-                    });
+                        holder.viewFileUser.setOnClickListener(v -> {
+                            Intent intentPdf = new Intent(Intent.ACTION_VIEW, Uri.parse(message.link));
+                            context.startActivity(intentPdf);
+                        });
+                    }
                 }
             }
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 
     private void setAvatarFriend(ItemMessageFriendHolder holder) {
-        int position = holder.getAdapterPosition();
+        try {
+            int position = holder.getAdapterPosition();
 
-        Bitmap currentAvata = bitmapAvata.
-                get(conversation.getListMessageData().get(position).idSender);
-        if (currentAvata != null) {
-            holder.avata.setImageBitmap(currentAvata);
-        } else {
-            final String id = conversation.getListMessageData().get(position).idSender;
-            if (bitmapAvataDB.get(id) == null) {
-                bitmapAvataDB.put(id, mDatabaseRef.child(context.getString(R.string.users))
-                        .child(id).child(context.getString(R.string.avatar_field)));
-                bitmapAvataDB.get(id).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.getValue() != null) {
-                            String avataStr = (String) dataSnapshot.getValue();
-                            if (!avataStr.equals(StaticConfig.STR_DEFAULT_BASE64)) {
-                                byte[] decodedString = Base64.decode(avataStr, Base64.DEFAULT);
-                                ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
-                            } else {
-                                ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeResource(context.getResources(), R.drawable.default_avatar));
+            Bitmap currentAvata = bitmapAvata.
+                    get(conversation.getListMessageData().get(position).idSender);
+            if (currentAvata != null) {
+                holder.avata.setImageBitmap(currentAvata);
+            } else {
+                final String id = conversation.getListMessageData().get(position).idSender;
+                if (bitmapAvataDB.get(id) == null) {
+                    bitmapAvataDB.put(id, mDatabaseRef.child(context.getString(R.string.users))
+                            .child(id).child(context.getString(R.string.avatar_field)));
+                    bitmapAvataDB.get(id).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            try {
+                                if (dataSnapshot.getValue() != null) {
+                                    String avataStr = (String) dataSnapshot.getValue();
+                                    if (!avataStr.equals(StaticConfig.STR_DEFAULT_BASE64)) {
+                                        byte[] decodedString = Base64.decode(avataStr, Base64.DEFAULT);
+                                        ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
+                                    } else {
+                                        ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeResource(context.getResources(), R.drawable.default_avatar));
+                                    }
+                                    notifyDataSetChanged();
+                                }
+                            } catch (Exception e) {
+                                Log.e(getClass().getName(), e.toString());
+                                Crashlytics.logException(e);
                             }
-                            notifyDataSetChanged();
                         }
-                    }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    }
-                });
+                        }
+                    });
+                }
             }
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 

@@ -6,6 +6,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
@@ -53,20 +54,25 @@ public class CallScreenActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.callscreen);
 
-        mAudioPlayer = new AudioPlayer(this);
-        mCallDuration = findViewById(R.id.callDuration);
-        mCallerName = findViewById(R.id.remoteUser);
-        mCallState = findViewById(R.id.callState);
-        Button endCallButton = findViewById(R.id.hangupButton);
+        try {
+            mAudioPlayer = new AudioPlayer(this);
+            mCallDuration = findViewById(R.id.callDuration);
+            mCallerName = findViewById(R.id.remoteUser);
+            mCallState = findViewById(R.id.callState);
+            Button endCallButton = findViewById(R.id.hangupButton);
 
-        endCallButton.setOnClickListener(v -> {
-            endCall();
-        });
-        mCallStart = System.currentTimeMillis();
-        mCallId = getIntent().getStringExtra(SinchService.CALL_ID);
-        mRoomId = getIntent().getStringExtra(getString(R.string.room));
+            endCallButton.setOnClickListener(v -> {
+                endCall();
+            });
+            mCallStart = System.currentTimeMillis();
+            mCallId = getIntent().getStringExtra(SinchService.CALL_ID);
+            mRoomId = getIntent().getStringExtra(getString(R.string.room));
 
-        isEstablishing = false;
+            isEstablishing = false;
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
     @Override
@@ -74,7 +80,7 @@ public class CallScreenActivity extends BaseActivity {
         Call call = getSinchServiceInterface().getCall(mCallId);
         if (call != null) {
             call.addCallListener(new SinchCallListener());
-            mCallerName.setText(getString(R.string.calling) + call.getRemoteUserId() + " ..");
+            mCallerName.setText(getString(R.string.calling) + " " + call.getRemoteUserId() + " ..");
             mCallState.setText(call.getState().toString());
         } else {
             finish();
@@ -128,41 +134,46 @@ public class CallScreenActivity extends BaseActivity {
 
         @Override
         public void onCallEnded(Call call) {
-            mAudioPlayer.stopProgressTone();
-            setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
+            try {
+                mAudioPlayer.stopProgressTone();
+                setVolumeControlStream(AudioManager.USE_DEFAULT_STREAM_TYPE);
 
-            isCalling = true;
-            //Kiểm tra nếu gọi đc mới lưu
-            if (isEstablishing) {
+                isCalling = true;
+                //Kiểm tra nếu gọi đc mới lưu
+                if (isEstablishing) {
 
-                // Lưu thông tin cuộc gọi để gửi lên Firebase
-                Map messageMap = new HashMap();
-                messageMap.put(getString(R.string.text), getString(R.string.incoming_call));
-                messageMap.put(getString(R.string.id_sender), FirebaseAuth.getInstance().getCurrentUser().getUid());
-                messageMap.put(getString(R.string.id_receiver), mRoomId);
-                messageMap.put(getString(R.string.type), getString(R.string.call_field));
-                messageMap.put(getString(R.string.duration), formatTimespan(System.currentTimeMillis() - mCallStart));
-                messageMap.put(getString(R.string.timestamp), ServerValue.TIMESTAMP);
+                    // Lưu thông tin cuộc gọi để gửi lên Firebase
+                    Map messageMap = new HashMap();
+                    messageMap.put(getString(R.string.text), getString(R.string.incoming_call));
+                    messageMap.put(getString(R.string.id_sender), FirebaseAuth.getInstance().getCurrentUser().getUid());
+                    messageMap.put(getString(R.string.id_receiver), mRoomId);
+                    messageMap.put(getString(R.string.type), getString(R.string.call_field));
+                    messageMap.put(getString(R.string.duration), formatTimespan(System.currentTimeMillis() - mCallStart));
+                    messageMap.put(getString(R.string.timestamp), ServerValue.TIMESTAMP);
 
-                FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + mRoomId)
-                        .push().setValue(messageMap);
+                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + mRoomId)
+                            .push().setValue(messageMap);
+                }
+                //Chưa gọi đc thì báo gọi nhỡ
+                else {
+                    // Lưu thông tin cuộc gọi để gửi lên Firebase
+                    Map messageMap = new HashMap();
+                    messageMap.put(getString(R.string.text), getString(R.string.missed_call));
+                    messageMap.put(getString(R.string.id_sender), FirebaseAuth.getInstance().getCurrentUser().getUid());
+                    messageMap.put(getString(R.string.id_receiver), mRoomId);
+                    messageMap.put(getString(R.string.type), getString(R.string.call_field));
+                    messageMap.put(getString(R.string.duration), getString(R.string.missed_call));
+                    messageMap.put(getString(R.string.timestamp), ServerValue.TIMESTAMP);
+
+                    FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + mRoomId)
+                            .push().setValue(messageMap);
+                }
+                // Kết thúc cuộc gọi
+                endCall();
+            } catch (Exception e) {
+                Log.e(getClass().getName(), e.toString());
+                Crashlytics.logException(e);
             }
-            //Chưa gọi đc thì báo gọi nhỡ
-            else {
-                // Lưu thông tin cuộc gọi để gửi lên Firebase
-                Map messageMap = new HashMap();
-                messageMap.put(getString(R.string.text), getString(R.string.missed_call));
-                messageMap.put(getString(R.string.id_sender), FirebaseAuth.getInstance().getCurrentUser().getUid());
-                messageMap.put(getString(R.string.id_receiver), mRoomId);
-                messageMap.put(getString(R.string.type), getString(R.string.call_field));
-                messageMap.put(getString(R.string.duration), getString(R.string.missed_call));
-                messageMap.put(getString(R.string.timestamp), ServerValue.TIMESTAMP);
-
-                FirebaseDatabase.getInstance().getReference().child(getString(R.string.message_table) + "/" + mRoomId)
-                        .push().setValue(messageMap);
-            }
-            // Kết thúc cuộc gọi
-            endCall();
         }
 
         @Override

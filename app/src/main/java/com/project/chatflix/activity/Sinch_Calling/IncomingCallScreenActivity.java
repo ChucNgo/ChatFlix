@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -38,20 +39,25 @@ public class IncomingCallScreenActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.incoming);
 
-        Button answer = findViewById(R.id.answerButton);
-        answer.setOnClickListener(mClickListener);
-        Button decline = findViewById(R.id.declineButton);
-        decline.setOnClickListener(mClickListener);
+        try {
+            Button answer = findViewById(R.id.answerButton);
+            answer.setOnClickListener(mClickListener);
+            Button decline = findViewById(R.id.declineButton);
+            decline.setOnClickListener(mClickListener);
 
-        // Lấy dữ liệu từ Firebase
-        mUserRef = FirebaseDatabase.getInstance().getReference();
-        mAuth = FirebaseAuth.getInstance();
+            // Lấy dữ liệu từ Firebase
+            mUserRef = FirebaseDatabase.getInstance().getReference();
+            mAuth = FirebaseAuth.getInstance();
 
-        mRoomId = String.valueOf(mAuth.getCurrentUser().getUid().hashCode());
+            mRoomId = String.valueOf(mAuth.getCurrentUser().getUid().hashCode());
 
-        mAudioPlayer = new AudioPlayer(this);
-        mAudioPlayer.playRingtone();
-        mCallId = getIntent().getStringExtra(SinchService.CALL_ID);
+            mAudioPlayer = new AudioPlayer(this);
+            mAudioPlayer.playRingtone();
+            mCallId = getIntent().getStringExtra(SinchService.CALL_ID);
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
     @Override
@@ -60,28 +66,33 @@ public class IncomingCallScreenActivity extends BaseActivity {
         if (call != null) {
             call.addCallListener(new SinchCallListener());
             TextView remoteUser = findViewById(R.id.remoteUser);
-            remoteUser.setText(call.getRemoteUserId() + getString(R.string.is_calling));
+            remoteUser.setText(call.getRemoteUserId() + " " + getString(R.string.is_calling));
         } else {
             finish();
         }
     }
 
     private void answerClicked() {
-        mAudioPlayer.stopRingtone();
-        declineCall = false;
-        Call call = getSinchServiceInterface().getCall(mCallId);
-        if (call != null) {
-            try {
-                call.answer();
-                Intent intent = new Intent(this, CallScreenActivity.class);
-                intent.putExtra(SinchService.CALL_ID, mCallId);
-                intent.putExtra(getString(R.string.room), mRoomId);
-                startActivity(intent);
-            } catch (MissingPermissionException e) {
-                ActivityCompat.requestPermissions(this, new String[]{e.getRequiredPermission()}, 0);
+        try {
+            mAudioPlayer.stopRingtone();
+            declineCall = false;
+            Call call = getSinchServiceInterface().getCall(mCallId);
+            if (call != null) {
+                try {
+                    call.answer();
+                    Intent intent = new Intent(this, CallScreenActivity.class);
+                    intent.putExtra(SinchService.CALL_ID, mCallId);
+                    intent.putExtra(getString(R.string.room), mRoomId);
+                    startActivity(intent);
+                } catch (MissingPermissionException e) {
+                    ActivityCompat.requestPermissions(this, new String[]{e.getRequiredPermission()}, 0);
+                }
+            } else {
+                finish();
             }
-        } else {
-            finish();
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 

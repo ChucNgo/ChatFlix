@@ -62,159 +62,174 @@ public class ListGroupsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder1, final int position) {
 
-        ItemGroupViewHolder holder = (ItemGroupViewHolder) holder1;
+        try {
+            ItemGroupViewHolder holder = (ItemGroupViewHolder) holder1;
 
-        final String groupName = listGroup.get(position).groupInfo.get(context.getString(R.string.name_field));
-        if (groupName != null && groupName.length() > 0) {
-            holder.txtGroupName.setText(groupName);
-            holder.iconGroup.setText((groupName.charAt(0) + "").toUpperCase());
-        }
+            final String groupName = listGroup.get(position).groupInfo.get(context.getString(R.string.name_field));
+            if (groupName != null && groupName.length() > 0) {
+                holder.txtGroupName.setText(groupName);
+                holder.iconGroup.setText((groupName.charAt(0) + "").toUpperCase());
+            }
 
-        holder.btnMore.setOnClickListener(view -> {
-            view.setTag(new Object[]{groupName, position});
-            view.getParent().showContextMenuForChild(view);
-        });
-        ((RelativeLayout) holder.txtGroupName.getParent())
-                .setOnClickListener(view -> {
-                    listFriend = ChatFragment.dataListFriend;
+            holder.btnMore.setOnClickListener(view -> {
+                view.setTag(new Object[]{groupName, position});
+                view.getParent().showContextMenuForChild(view);
+            });
+            ((RelativeLayout) holder.txtGroupName.getParent())
+                    .setOnClickListener(view -> {
+                        listFriend = ChatFragment.dataListFriend;
 
-                    Intent intent = new Intent(context, ChatActivity.class);
-                    intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, groupName);
-                    ArrayList<CharSequence> idFriend = new ArrayList<>();
-                    ChatActivity.bitmapAvataFriend = new HashMap<>();
+                        Intent intent = new Intent(context, ChatActivity.class);
+                        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, groupName);
+                        ArrayList<CharSequence> idFriend = new ArrayList<>();
+                        ChatActivity.bitmapAvataFriend = new HashMap<>();
 
-                    for (String id : listGroup.get(position).member) {
-                        idFriend.add(id);
-                        String avatar = listFriend.getAvataById(id);
+                        for (String id : listGroup.get(position).member) {
+                            idFriend.add(id);
+                            String avatar = listFriend.getAvataById(id);
 
-                        if (!avatar.equals(StaticConfig.STR_DEFAULT_BASE64)) {
-                            byte[] decodedString = Base64.decode(avatar, Base64.DEFAULT);
-                            ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
-                        } else if (avatar.equals(StaticConfig.STR_DEFAULT_BASE64)) {
-                            ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeResource(context.getResources(), R.drawable.default_avatar));
-                        } else {
-                            ChatActivity.bitmapAvataFriend.put(id, null);
+                            if (!avatar.equals(StaticConfig.STR_DEFAULT_BASE64)) {
+                                byte[] decodedString = Base64.decode(avatar, Base64.DEFAULT);
+                                ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
+                            } else if (avatar.equals(StaticConfig.STR_DEFAULT_BASE64)) {
+                                ChatActivity.bitmapAvataFriend.put(id, BitmapFactory.decodeResource(context.getResources(), R.drawable.default_avatar));
+                            } else {
+                                ChatActivity.bitmapAvataFriend.put(id, null);
+                            }
                         }
-                    }
-                    String idRoom = listGroup.get(position).id;
-                    intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID, idRoom);
-                    intent.putExtra(context.getString(R.string.kind_of_chat), context.getString(R.string.group_chat));
-                    context.startActivity(intent);
+                        String idRoom = listGroup.get(position).id;
+                        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID, idRoom);
+                        intent.putExtra(context.getString(R.string.kind_of_chat), context.getString(R.string.group_chat));
+                        context.startActivity(intent);
 
-                    mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID).setValue(idRoom);
-                    mDatabaseRef.child(context.getString(R.string.online_chat_table)).keepSynced(false);
-                });
+                        mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID).setValue(idRoom);
+                        mDatabaseRef.child(context.getString(R.string.online_chat_table)).keepSynced(false);
+                    });
 
-        getLastMessage(holder, groupName);
+            getLastMessage(holder, groupName);
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
     private void getLastMessage(ItemGroupViewHolder holder, String groupName) {
-        int position = holder.getAdapterPosition();
-        String idRoom = listGroup.get(position).id;
+        try {
+            int position = holder.getAdapterPosition();
+            String idRoom = listGroup.get(position).id;
 
-        mDatabaseRef.child(context.getString(R.string.message_table))
-                .child(idRoom).limitToLast(1)
-                .addChildEventListener(new ChildEventListener() {
-                    @Override
-                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                        try {
-                            if (dataSnapshot.getChildrenCount() != 0) {
-                                Message message = dataSnapshot.getValue(Message.class);
-                                if (!message.idSender.startsWith(StaticConfig.UID)) {
-                                    if (!GroupFragment.firstLoad) {
-                                        mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID)
-                                                .addListenerForSingleValueEvent(new ValueEventListener() {
-                                                    @Override
-                                                    public void onDataChange(DataSnapshot dataSnapshot) {
+            mDatabaseRef.child(context.getString(R.string.message_table))
+                    .child(idRoom).limitToLast(1)
+                    .addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                            try {
+                                if (dataSnapshot.getChildrenCount() != 0) {
+                                    Message message = dataSnapshot.getValue(Message.class);
+                                    if (!message.idSender.startsWith(StaticConfig.UID)) {
+                                        if (!GroupFragment.firstLoad) {
+                                            mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID)
+                                                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                                                        @Override
+                                                        public void onDataChange(DataSnapshot dataSnapshot) {
 
-                                                        try {
-                                                            Friend friendChoose = null;
+                                                            try {
+                                                                Friend friendChoose = null;
 
-                                                            for (Friend friend : listFriend.getListFriend()) {
-                                                                if (friend.id.equalsIgnoreCase(message.idSender)) {
-                                                                    friendChoose = friend;
+                                                                for (Friend friend : listFriend.getListFriend()) {
+                                                                    if (friend.id.equalsIgnoreCase(message.idSender)) {
+                                                                        friendChoose = friend;
+                                                                    }
                                                                 }
-                                                            }
 
-                                                            if (dataSnapshot.getValue() == null) {
-                                                                putNotiMessageGroup(friendChoose, message, listGroup.get(position));
-                                                            } else {
-                                                                if (!dataSnapshot.getValue().equals(idRoom + "")) {
+                                                                if (dataSnapshot.getValue() == null) {
                                                                     putNotiMessageGroup(friendChoose, message, listGroup.get(position));
+                                                                } else {
+                                                                    if (!dataSnapshot.getValue().equals(idRoom + "")) {
+                                                                        putNotiMessageGroup(friendChoose, message, listGroup.get(position));
+                                                                    }
                                                                 }
+                                                            } catch (Exception e) {
+                                                                Log.e(getClass().getName(), e.toString()); Crashlytics.logException(e);
                                                             }
-                                                        } catch (Exception e) {
-                                                            Log.e(getClass().getName(), e.toString()); Crashlytics.logException(e);
                                                         }
-                                                    }
 
-                                                    @Override
-                                                    public void onCancelled(DatabaseError databaseError) {
+                                                        @Override
+                                                        public void onCancelled(DatabaseError databaseError) {
 
-                                                    }
-                                                });
+                                                        }
+                                                    });
+                                        }
                                     }
                                 }
+
+                            } catch (Exception e) {
+                                Log.e(getClass().getSimpleName(), e.toString());
+                                Crashlytics.logException(e);
                             }
-
-                        } catch (Exception e) {
-                            Log.e(getClass().getSimpleName(), e.toString());
-                            Crashlytics.logException(e);
                         }
-                    }
 
-                    @Override
-                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                        @Override
+                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onChildRemoved(DataSnapshot dataSnapshot) {
+                        @Override
+                        public void onChildRemoved(DataSnapshot dataSnapshot) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                        @Override
+                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    }
-                });
+                        }
+                    });
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
 
     }
 
     private void putNotiMessageGroup(Friend friend, Message message, Group group) {
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(context);
+        try {
+            NotificationCompat.Builder mBuilder =
+                    new NotificationCompat.Builder(context);
 
-        //Create the intent that’ll fire when the user taps the notification/
-        Intent intent = new Intent(context, ChatActivity.class);
+            //Create the intent that’ll fire when the user taps the notification/
+            Intent intent = new Intent(context, ChatActivity.class);
 
-        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, group.groupInfo.get(context.getString(R.string.name_field)));
-        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID, group.id);
-        intent.putExtra(context.getString(R.string.kind_of_chat), context.getString(R.string.group_chat));
+            intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, group.groupInfo.get(context.getString(R.string.name_field)));
+            intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID, group.id);
+            intent.putExtra(context.getString(R.string.kind_of_chat), context.getString(R.string.group_chat));
 
-        intent.putExtra(StaticConfig.CLICK_INTENT_FROM_NOTI, true);
+            intent.putExtra(StaticConfig.CLICK_INTENT_FROM_NOTI, true);
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
+                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        mBuilder.setContentIntent(pendingIntent);
+            mBuilder.setContentIntent(pendingIntent);
 
-        mBuilder.setSmallIcon(R.drawable.logo_1);
-        mBuilder.setContentTitle(friend.name + " " +
-                context.getString(R.string.sent_to) + " " +
-                group.groupInfo.get(context.getString(R.string.name_field)));
-        mBuilder.setContentText(message.text);
+            mBuilder.setSmallIcon(R.drawable.logo_1);
+            mBuilder.setContentTitle(friend.name + " " +
+                    context.getString(R.string.sent_to) + " " +
+                    group.groupInfo.get(context.getString(R.string.name_field)));
+            mBuilder.setContentText(message.text);
 
-        NotificationManager mNotificationManager =
+            NotificationManager mNotificationManager =
 
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        mNotificationManager.notify(context.getString(R.string.app_name), 001, mBuilder.build());
+            mNotificationManager.notify(context.getString(R.string.app_name), 001, mBuilder.build());
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
     @Override

@@ -4,12 +4,15 @@ import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.crashlytics.android.Crashlytics;
 import com.project.chatflix.R;
 import com.project.chatflix.object.Group;
 import com.project.chatflix.object.ListFriend;
@@ -45,35 +48,41 @@ public class ListChoosePeopleAdapter extends RecyclerView.Adapter<RecyclerView.V
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        ((ItemFriendHolder) holder).txtName.setText(listFriend.getListFriend().get(position).name);
-        ((ItemFriendHolder) holder).txtEmail.setText(listFriend.getListFriend().get(position).email);
-        String avata = listFriend.getListFriend().get(position).avatar;
-        final String id = listFriend.getListFriend().get(position).id;
-        if (!avata.equals(StaticConfig.STR_DEFAULT_BASE64)) {
-            byte[] decodedString = Base64.decode(avata, Base64.DEFAULT);
-            ((ItemFriendHolder) holder).avata.setImageBitmap(BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
-        } else {
-            ((ItemFriendHolder) holder).avata.setImageBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.default_avatar));
-        }
-        ((ItemFriendHolder) holder).checkBox.setOnCheckedChangeListener((compoundButton, b) -> {
-            if (b) {
-                listIDChoose.add(id);
-                listIDRemove.remove(id);
+    public void onBindViewHolder(RecyclerView.ViewHolder holder1, int position) {
+        try {
+            ItemFriendHolder holder = (ItemFriendHolder) holder1;
+            holder.txtName.setText(listFriend.getListFriend().get(position).name);
+            holder.txtEmail.setText(listFriend.getListFriend().get(position).email);
+            String avata = listFriend.getListFriend().get(position).avatar;
+            final String id = listFriend.getListFriend().get(position).id;
+            if (!avata.equals(StaticConfig.STR_DEFAULT_BASE64)) {
+                byte[] decodedString = Base64.decode(avata, Base64.DEFAULT);
+                holder.avata.setImageBitmap(BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
             } else {
-                listIDRemove.add(id);
-                listIDChoose.remove(id);
+                holder.avata.setImageBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.default_avatar));
             }
-            if (listIDChoose.size() >= 3) {
-                btnAddGroup.setBackgroundColor(context.getResources().getColor(R.color.colorPrimary));
-            } else {
-                btnAddGroup.setBackgroundColor(context.getResources().getColor(R.color.grey_500));
+            holder.checkBox.setOnCheckedChangeListener((compoundButton, b) -> {
+                if (b) {
+                    listIDChoose.add(id);
+                    listIDRemove.remove(id);
+                } else {
+                    listIDRemove.add(id);
+                    listIDChoose.remove(id);
+                }
+                if (listIDChoose.size() >= 3) {
+                    btnAddGroup.setBackgroundColor(context.getResources().getColor(R.color.colorPrimary));
+                } else {
+                    btnAddGroup.setBackgroundColor(context.getResources().getColor(R.color.grey_500));
+                }
+            });
+            if (isEdit && editGroup.member.contains(id)) {
+                holder.checkBox.setChecked(true);
+            } else if (editGroup != null && !editGroup.member.contains(id)) {
+                holder.checkBox.setChecked(false);
             }
-        });
-        if (isEdit && editGroup.member.contains(id)) {
-            ((ItemFriendHolder) holder).checkBox.setChecked(true);
-        } else if (editGroup != null && !editGroup.member.contains(id)) {
-            ((ItemFriendHolder) holder).checkBox.setChecked(false);
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 
@@ -89,10 +98,10 @@ public class ListChoosePeopleAdapter extends RecyclerView.Adapter<RecyclerView.V
 
         public ItemFriendHolder(View itemView) {
             super(itemView);
-            txtName = (TextView) itemView.findViewById(R.id.txtName);
-            txtEmail = (TextView) itemView.findViewById(R.id.txtEmail);
-            avata = (CircleImageView) itemView.findViewById(R.id.icon_avata);
-            checkBox = (CheckBox) itemView.findViewById(R.id.checkAddPeople);
+            txtName = itemView.findViewById(R.id.txtName);
+            txtEmail = itemView.findViewById(R.id.txtEmail);
+            avata = itemView.findViewById(R.id.icon_avata);
+            checkBox = itemView.findViewById(R.id.checkAddPeople);
         }
     }
 }

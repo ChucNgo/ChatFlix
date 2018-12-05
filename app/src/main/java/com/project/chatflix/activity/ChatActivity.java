@@ -342,31 +342,36 @@ public class ChatActivity extends BaseActivity {
 
     public void requestPermission() {
 
-        int checkCameraPer = ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA);
-        int checkWiteExPer = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int checkReadExPer = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE);
-        int permissionGranted = PackageManager.PERMISSION_GRANTED;
+        try {
+            int checkCameraPer = ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA);
+            int checkWiteExPer = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            int checkReadExPer = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE);
+            int permissionGranted = PackageManager.PERMISSION_GRANTED;
 
-        String[] permissions = new String[]{
-                android.Manifest.permission.CAMERA,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE};
-        //check Android 6+
-        if (Build.VERSION.SDK_INT >= 23) {
-            //check permission granted
-            //check permission granted
-            if (checkCameraPer != permissionGranted
-                    || checkWiteExPer != permissionGranted
-                    || checkReadExPer != permissionGranted
-                    ) {
-                //request Permissions
-                ActivityCompat.requestPermissions(this, permissions, StaticConfig.PERMISSION_CONSTANT);
+            String[] permissions = new String[]{
+                    android.Manifest.permission.CAMERA,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE};
+            //check Android 6+
+            if (Build.VERSION.SDK_INT >= 23) {
+                //check permission granted
+                //check permission granted
+                if (checkCameraPer != permissionGranted
+                        || checkWiteExPer != permissionGranted
+                        || checkReadExPer != permissionGranted
+                        ) {
+                    //request Permissions
+                    ActivityCompat.requestPermissions(this, permissions, StaticConfig.PERMISSION_CONSTANT);
 
+                } else {
+                    sendToGallery();
+                }
             } else {
                 sendToGallery();
             }
-        } else {
-            sendToGallery();
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
         }
     }
 

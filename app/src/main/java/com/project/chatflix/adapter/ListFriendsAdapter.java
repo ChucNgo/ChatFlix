@@ -65,186 +65,201 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder1, final int position) {
-        final String name = listFriend.getListFriend().get(position).name;
-        final String id = listFriend.getListFriend().get(position).id;
-        ItemFriendViewHolder holder = (ItemFriendViewHolder) holder1;
-        holder.txtName.setText(name);
+        try {
+            final String name = listFriend.getListFriend().get(position).name;
+            final String id = listFriend.getListFriend().get(position).id;
+            ItemFriendViewHolder holder = (ItemFriendViewHolder) holder1;
+            holder.txtName.setText(name);
 
-        addEvents(holder, position);
-        getLastMessage(holder);
+            addEvents(holder, position);
+            getLastMessage(holder);
 
-        if (listFriend.getListFriend().get(position).avatar.equals(StaticConfig.STR_DEFAULT_BASE64)) {
-            holder.avata.setImageResource(R.drawable.default_avatar);
-        } else {
-            byte[] decodedString = Base64.decode(listFriend.getListFriend().get(position).avatar, Base64.DEFAULT);
-            Bitmap src = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-            holder.avata.setImageBitmap(src);
-        }
+            if (listFriend.getListFriend().get(position).avatar.equals(StaticConfig.STR_DEFAULT_BASE64)) {
+                holder.avata.setImageResource(R.drawable.default_avatar);
+            } else {
+                byte[] decodedString = Base64.decode(listFriend.getListFriend().get(position).avatar, Base64.DEFAULT);
+                Bitmap src = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                holder.avata.setImageBitmap(src);
+            }
 
-        if (listFriend.getListFriend().get(position).status.isOnline) {
-            holder.avata.setBorderWidth(6);
-        } else {
-            holder.avata.setBorderWidth(0);
-        }
+            if (listFriend.getListFriend().get(position).status.isOnline) {
+                holder.avata.setBorderWidth(6);
+            } else {
+                holder.avata.setBorderWidth(0);
+            }
 
-        mDatabaseRef.child(context.getString(R.string.users)).child(id)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.hasChild(context.getString(R.string.online))) {
-                            String userOnline = dataSnapshot.child(context.getString(R.string.online)).getValue().toString();
-                            if (userOnline.equals(context.getString(R.string.true_field))) {
-                                holder.imgOnline.setVisibility(View.VISIBLE);
-                            } else {
-                                holder.imgOnline.setVisibility(View.INVISIBLE);
+            mDatabaseRef.child(context.getString(R.string.users)).child(id)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.hasChild(context.getString(R.string.online))) {
+                                String userOnline = dataSnapshot.child(context.getString(R.string.online)).getValue().toString();
+                                if (userOnline.equals(context.getString(R.string.true_field))) {
+                                    holder.imgOnline.setVisibility(View.VISIBLE);
+                                } else {
+                                    holder.imgOnline.setVisibility(View.INVISIBLE);
+                                }
                             }
                         }
-                    }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    }
-                });
+                        }
+                    });
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
     private void getLastMessage(ItemFriendViewHolder holder) {
-        int position = holder.getAdapterPosition();
-        String id = listFriend.getListFriend().get(position).id;
-        String idRoom = listFriend.getListFriend().get(position).idRoom;
+        try {
+            int position = holder.getAdapterPosition();
+            String id = listFriend.getListFriend().get(position).id;
+            String idRoom = listFriend.getListFriend().get(position).idRoom;
 
-        mDatabaseRef.child(context.getString(R.string.message_table))
-                .child(idRoom).limitToLast(1)
-                .addChildEventListener(new ChildEventListener() {
-                    @Override
-                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                        try {
-                            if (dataSnapshot.getChildrenCount() != 0) {
+            mDatabaseRef.child(context.getString(R.string.message_table))
+                    .child(idRoom).limitToLast(1)
+                    .addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                            try {
+                                if (dataSnapshot.getChildrenCount() != 0) {
 
-                                holder.txtMessage.setVisibility(View.VISIBLE);
-                                holder.txtTime.setVisibility(View.VISIBLE);
+                                    holder.txtMessage.setVisibility(View.VISIBLE);
+                                    holder.txtTime.setVisibility(View.VISIBLE);
 
-                                Message message = dataSnapshot.getValue(Message.class);
+                                    Message message = dataSnapshot.getValue(Message.class);
 
-                                String time = new SimpleDateFormat("EEE, d MMM yyyy").format(new Date(message.timestamp));
-                                String today = new SimpleDateFormat("EEE, d MMM yyyy").format(new Date(System.currentTimeMillis()));
-                                if (today.equals(time)) {
-                                    holder.txtTime.setText(new SimpleDateFormat("HH:mm")
-                                            .format(new Date(message.timestamp)));
-                                } else {
-                                    holder.txtTime.setText(new SimpleDateFormat("MMM d")
-                                            .format(new Date(message.timestamp)));
-                                }
-
-                                if (!message.idSender.startsWith(id)) {
-                                    holder.txtMessage.setText("You: " + message.text);
-                                    holder.txtMessage.setTypeface(Typeface.DEFAULT);
-                                    holder.txtName.setTypeface(Typeface.DEFAULT);
-                                } else {
-                                    holder.txtMessage.setText(message.text);
-                                    holder.txtMessage.setTypeface(Typeface.DEFAULT_BOLD);
-                                    holder.txtName.setTypeface(Typeface.DEFAULT_BOLD);
-
-                                    if (!ChatFragment.firstLoad) {
-                                        if (message.type.equalsIgnoreCase(context.getString(R.string.text))) {
-                                            mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID)
-                                                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                                                        @Override
-                                                        public void onDataChange(DataSnapshot dataSnapshot) {
-                                                            if (dataSnapshot.getValue() == null) {
-                                                                putNotiMessageFriend(listFriend.getListFriend().get(position), message, idRoom);
-                                                            } else {
-                                                                if (!dataSnapshot.getValue().equals(idRoom + "")) {
-                                                                    putNotiMessageFriend(listFriend.getListFriend().get(position), message, idRoom);
-                                                                }
-                                                            }
-                                                        }
-
-                                                        @Override
-                                                        public void onCancelled(DatabaseError databaseError) {
-
-                                                        }
-                                                    });
-                                        }
+                                    String time = new SimpleDateFormat("EEE, d MMM yyyy").format(new Date(message.timestamp));
+                                    String today = new SimpleDateFormat("EEE, d MMM yyyy").format(new Date(System.currentTimeMillis()));
+                                    if (today.equals(time)) {
+                                        holder.txtTime.setText(new SimpleDateFormat("HH:mm")
+                                                .format(new Date(message.timestamp)));
+                                    } else {
+                                        holder.txtTime.setText(new SimpleDateFormat("MMM d")
+                                                .format(new Date(message.timestamp)));
                                     }
 
+                                    if (!message.idSender.startsWith(id)) {
+                                        holder.txtMessage.setText("You: " + message.text);
+                                        holder.txtMessage.setTypeface(Typeface.DEFAULT);
+                                        holder.txtName.setTypeface(Typeface.DEFAULT);
+                                    } else {
+                                        holder.txtMessage.setText(message.text);
+                                        holder.txtMessage.setTypeface(Typeface.DEFAULT_BOLD);
+                                        holder.txtName.setTypeface(Typeface.DEFAULT_BOLD);
+
+                                        if (!ChatFragment.firstLoad) {
+                                            if (message.type.equalsIgnoreCase(context.getString(R.string.text))) {
+                                                mDatabaseRef.child(context.getString(R.string.online_chat_table)).child(StaticConfig.UID)
+                                                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                                                            @Override
+                                                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                                                if (dataSnapshot.getValue() == null) {
+                                                                    putNotiMessageFriend(listFriend.getListFriend().get(position), message, idRoom);
+                                                                } else {
+                                                                    if (!dataSnapshot.getValue().equals(idRoom + "")) {
+                                                                        putNotiMessageFriend(listFriend.getListFriend().get(position), message, idRoom);
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            @Override
+                                                            public void onCancelled(DatabaseError databaseError) {
+
+                                                            }
+                                                        });
+                                            }
+                                        }
+
+                                    }
+
+                                } else {
+                                    holder.txtMessage.setVisibility(View.GONE);
+                                    holder.txtTime.setVisibility(View.GONE);
                                 }
-
-                            } else {
-                                holder.txtMessage.setVisibility(View.GONE);
-                                holder.txtTime.setVisibility(View.GONE);
+                            } catch (Exception e) {
+                                Log.e(getClass().getSimpleName(), e.toString());
+                                Crashlytics.logException(e);
                             }
-                        } catch (Exception e) {
-                            Log.e(getClass().getSimpleName(), e.toString());
-                            Crashlytics.logException(e);
                         }
-                    }
 
-                    @Override
-                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                        @Override
+                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onChildRemoved(DataSnapshot dataSnapshot) {
+                        @Override
+                        public void onChildRemoved(DataSnapshot dataSnapshot) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                        @Override
+                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
 
-                    }
+                        }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    }
-                });
+                        }
+                    });
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
 
     }
 
     private void putNotiMessageFriend(Friend friend, Message message, String idRoom) {
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(context);
+        try {
+            NotificationCompat.Builder mBuilder =
+                    new NotificationCompat.Builder(context);
 
-        //Create the intent that’ll fire when the user taps the notification//
-        Intent intent = new Intent(context, ChatActivity.class);
+            //Create the intent that’ll fire when the user taps the notification//
+            Intent intent = new Intent(context, ChatActivity.class);
 
-        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, friend.name);
-        intent.putExtra(context.getString(R.string.kind_of_chat), context.getString(R.string.friend_chat));
-        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ID, friend.id);
-        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID, idRoom);
+            intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, friend.name);
+            intent.putExtra(context.getString(R.string.kind_of_chat), context.getString(R.string.friend_chat));
+            intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ID, friend.id);
+            intent.putExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID, idRoom);
 
-        intent.putExtra(StaticConfig.CLICK_INTENT_FROM_NOTI, true);
+            intent.putExtra(StaticConfig.CLICK_INTENT_FROM_NOTI, true);
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
+                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        mBuilder.setContentIntent(pendingIntent);
+            mBuilder.setContentIntent(pendingIntent);
 
-        mBuilder.setSmallIcon(R.drawable.logo_1);
-        mBuilder.setContentTitle(friend.name);
-        mBuilder.setContentText(message.text);
+            mBuilder.setSmallIcon(R.drawable.logo_1);
+            mBuilder.setContentTitle(friend.name);
+            mBuilder.setContentText(message.text);
 
-        NotificationManager mNotificationManager =
+            NotificationManager mNotificationManager =
 
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        mNotificationManager.notify(context.getString(R.string.app_name), 001, mBuilder.build());
+            mNotificationManager.notify(context.getString(R.string.app_name), 001, mBuilder.build());
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
-    private void addEvents(RecyclerView.ViewHolder holder, int position) {
+    private void addEvents(ItemFriendViewHolder holder, int position) {
         final String name = listFriend.getListFriend().get(position).name;
         final String id = listFriend.getListFriend().get(position).id;
         final String idRoom = listFriend.getListFriend().get(position).idRoom;
         final String avatar = listFriend.getListFriend().get(position).avatar;
-        String friendName = (String) ((ItemFriendViewHolder) holder).txtName.getText();
+        String friendName = (String) holder.txtName.getText();
 
-        ((View) ((ItemFriendViewHolder) holder).txtName.getParent().getParent().getParent())
+        ((View) holder.txtName.getParent().getParent().getParent())
                 .setOnClickListener(v -> {
                     try {
-                        ((ItemFriendViewHolder) holder).txtMessage.setTypeface(Typeface.DEFAULT);
-                        ((ItemFriendViewHolder) holder).txtName.setTypeface(Typeface.DEFAULT);
+                        holder.txtMessage.setTypeface(Typeface.DEFAULT);
+                        holder.txtName.setTypeface(Typeface.DEFAULT);
                         Intent intent = new Intent(context, ChatActivity.class);
                         intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, name);
                         intent.putExtra(context.getString(R.string.kind_of_chat), context.getString(R.string.friend_chat));
@@ -268,7 +283,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 });
 
         //nhấn giữ để xóa bạn
-        ((View) ((ItemFriendViewHolder) holder).txtName.getParent().getParent().getParent())
+        ((View) holder.txtName.getParent().getParent().getParent())
                 .setOnLongClickListener(v -> {
 
                     new AlertDialog.Builder(context)

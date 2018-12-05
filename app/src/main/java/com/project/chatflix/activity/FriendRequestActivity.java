@@ -6,8 +6,10 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 
+import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -38,25 +40,30 @@ public class FriendRequestActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        tb = findViewById(R.id.toolbar);
-        setSupportActionBar(tb);
-        getSupportActionBar().setTitle(null);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        rvRequest = findViewById(R.id.rv_friend_request);
-        rvRequest.setLayoutManager(layoutManager);
+        try {
+            tb = findViewById(R.id.toolbar);
+            setSupportActionBar(tb);
+            getSupportActionBar().setTitle(null);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+            rvRequest = findViewById(R.id.rv_friend_request);
+            rvRequest.setLayoutManager(layoutManager);
 
-        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
+            mDatabaseRef = FirebaseDatabase.getInstance().getReference();
 
-        Query query = mDatabaseRef.child(getString(R.string.request_table))
-                .child(StaticConfig.UID);
-        FirebaseRecyclerOptions<User> options = new FirebaseRecyclerOptions.Builder<User>()
-                .setQuery(query, User.class).build();
+            Query query = mDatabaseRef.child(getString(R.string.request_table))
+                    .child(StaticConfig.UID);
+            FirebaseRecyclerOptions<User> options = new FirebaseRecyclerOptions.Builder<User>()
+                    .setQuery(query, User.class).build();
 
-        adapterRequest = new ListFriendRequestAdapter(this, options);
-        rvRequest.setAdapter(adapterRequest);
+            adapterRequest = new ListFriendRequestAdapter(this, options);
+            rvRequest.setAdapter(adapterRequest);
 
-        NotificationManagerCompat.from(this).cancel("ChatFlix", 001);
+            NotificationManagerCompat.from(this).cancel(getString(R.string.app_name), 001);
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
     @Override

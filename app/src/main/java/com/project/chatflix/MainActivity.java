@@ -100,25 +100,30 @@ public class MainActivity extends BaseActivity implements SinchService.StartFail
             valueEventListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.getChildrenCount() != 0) {
-                        String name = "";
-                        int i = 0;
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            if (i == dataSnapshot.getChildrenCount() - 1) {
-                                User user = snapshot.getValue(User.class);
-                                int count = (int) (dataSnapshot.getChildrenCount() - 1);
+                    try {
+                        if (dataSnapshot.getChildrenCount() != 0 && dataSnapshot.getValue() != null) {
+                            String name = "";
+                            int i = 0;
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                if (i == dataSnapshot.getChildrenCount() - 1) {
+                                    User user = snapshot.getValue(User.class);
+                                    int count = (int) (dataSnapshot.getChildrenCount() - 1);
 
-                                if (count == 0) {
-                                    name = user.name + getString(R.string.sent_you_request);
-                                } else {
-                                    name = user.name + getString(R.string.and) + count + getString(R.string.people_sent_request);
+                                    if (count == 0) {
+                                        name = user.name + " " +  getString(R.string.sent_you_request);
+                                    } else {
+                                        name = user.name + " " + getString(R.string.and) + count + getString(R.string.people_sent_request);
+                                    }
+                                }else {
+                                    i++;
                                 }
-                            }else {
-                                i++;
                             }
+                            i = 0;
+                            putNotiFriendRequest(name);
                         }
-                        i = 0;
-                        putNotiFriendRequest(name);
+                    } catch (Exception e) {
+                        Log.e(getClass().getName(), e.toString());
+                        Crashlytics.logException(e);
                     }
                 }
 
@@ -202,25 +207,30 @@ public class MainActivity extends BaseActivity implements SinchService.StartFail
     }
 
     private void putNotiFriendRequest(String name) {
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(this);
+        try {
+            NotificationCompat.Builder mBuilder =
+                    new NotificationCompat.Builder(this);
 
-        //Create the intent that’ll fire when the user taps the notification//
-        Intent intent = new Intent(this, FriendRequestActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            //Create the intent that’ll fire when the user taps the notification//
+            Intent intent = new Intent(this, FriendRequestActivity.class);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        mBuilder.setContentIntent(pendingIntent);
+            mBuilder.setContentIntent(pendingIntent);
 
-        mBuilder.setSmallIcon(R.drawable.logo_1);
-        mBuilder.setContentTitle(getString(R.string.friend_request));
-        mBuilder.setContentText(name);
+            mBuilder.setSmallIcon(R.drawable.logo_1);
+            mBuilder.setContentTitle(getString(R.string.friend_request));
+            mBuilder.setContentText(name);
 
-        NotificationManager mNotificationManager =
+            NotificationManager mNotificationManager =
 
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        mNotificationManager.notify(getString(R.string.app_name), 001, mBuilder.build());
+            mNotificationManager.notify(getString(R.string.app_name), 001, mBuilder.build());
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.toString());
+            Crashlytics.logException(e);
+        }
     }
 
     @Override
